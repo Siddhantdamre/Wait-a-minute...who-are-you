@@ -1,0 +1,23 @@
+﻿=================================================================
+PHASE 3: DEIC Transfer Pilot ΓÇö Cyber Incident Diagnosis
+=================================================================
+
+## Head-to-Head Comparison (Budget=8, N=100, 3 seeds)
+| Solver | Seed 1 | Seed 2 | Seed 3 | Average |
+|---|---|---|---|---|
+| Random Baseline | 0.0% | 0.0% | 0.0% | 0.0% |
+| DEIC (no trust) | 31.0% | 39.0% | 37.0% | 35.7% |
+| DEIC (adaptive trust) | 54.0% | 59.0% | 58.0% | 57.0% |
+
+## Budget Sweep (DEIC Adaptive Trust, averaged across 3 seeds)
+| Solver | Budget=6 | Budget=8 | Budget=10 | Budget=12 |
+|---|---|---|---|---|
+| DEIC (adaptive trust) | 23.7% | 59.3% | 81.3% | 94.0% |
+
+## Transfer Verdict
+  Budget=8  accuracy: 59.3%
+  Budget=12 accuracy: 94.0%
+  RESULT: DEIC transfers to cyber domain with meaningful performance.
+  Zero changes were made to deic_core/core.py.
+
+=================================================================
