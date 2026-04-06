@@ -1,0 +1,17 @@
+--- PLANNER INTEGRATION METRICS (N=100) ---
+
+C6 Benchmark (Budget=12)
+                OFF          | ON
+  Accuracy:     90.0%        | 89.0%
+  Avg Budget:   9.32         | 9.32
+  Escalations:  0            | 11
+
+Cyber Transfer (Budget=8)
+                OFF          | ON
+  Accuracy:     95.0%        | 94.0%
+  Avg Budget:   5.37         | 5.37
+
+Clinical Transfer (Budget=8)
+                OFF          | ON
+  Accuracy:     74.0%        | 76.0%
+  Avg Budget:   6.61         | 6.61

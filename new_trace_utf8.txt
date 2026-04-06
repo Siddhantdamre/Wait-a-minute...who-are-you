@@ -1,0 +1,42 @@
+﻿======================================================================
+PLANNER TRACE ù C6 Episode (seed=12345, budget=8)
+Executing with Minimal Planner Integration (Phase 8)
+======================================================================
+
+-- Turn 1 --
+  Planner:   EXPLORE
+  Action:    QUERY (Node_A, Server_Racks)
+
+-- Turn 2 --
+  Planner:   EXPLORE
+  Action:    QUERY (Node_B, Server_Racks)
+
+-- Turn 3 --
+  Planner:   EXPLORE
+  Action:    QUERY (Node_C, Server_Racks)
+
+-- Turn 4 --
+  Planner:   EXPLORE
+  Action:    QUERY (Node_A, Optical_Switches)
+
+-- Turn 5 --
+  Planner:   EXPLORE
+  Action:    QUERY (Node_B, Optical_Switches)
+
+-- Turn 6 --
+  Planner:   EXPLORE
+  Action:    QUERY (Node_C, Optical_Switches)
+
+-- Turn 7 --
+  Planner:   EXPLORE
+  Action:    QUERY (Node_A, Cooling_Units)
+
+-- Turn 8 --
+  Planner:   ESCALATE
+  Action:    ESCALATE
+
+======================================================================
+RESULT: 3/8 correct (37.5% accuracy)
+Queries used: 7/8
+*(Note: Final commit resolves ties stochastically if ambiguity remains)*
+======================================================================

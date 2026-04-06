@@ -15,6 +15,7 @@ from deic_core import (
     MinimalPlanner, FixedPartitionGenerator,
 )
 from benchmark.environment import ProceduralEnvironment, EpisodeConfig
+from benchmark.deic_adapter import DEICBenchmarkAdapter
 
 
 def run_traced_episode(seed=12345, budget=8):
@@ -27,81 +28,28 @@ def run_traced_episode(seed=12345, budget=8):
     items = list(initial_state.keys())
 
     # Stack components
-    engine = DEIC()
-    gen = FixedPartitionGenerator(group_size=4, multipliers=[1.2, 1.5, 2.0, 2.5])
-    engine.initialize_beliefs({
-        'items': items,
-        'sources': agents,
-        'initial_values': dict(initial_state),
-    }, hypothesis_generator=gen)
-
-    inspector = BeliefInspector(engine)
-    controller = CommitController()
-    planner = MinimalPlanner()
-
-    queried_pairs = set()
-    queries_used = 0
-
+    adapter = DEICBenchmarkAdapter(use_planner=True)
+    
     print(f"{'='*70}")
     print(f"PLANNER TRACE — C6 Episode (seed={seed}, budget={budget})")
+    print(f"Executing with Minimal Planner Integration (Phase 8)")
     print(f"{'='*70}")
 
-    for turn in range(budget):
-        remaining = budget - turn
+    trajectory, result = adapter.solve(env)
 
-        # 1. Build workspace
-        ws = inspector.workspace()
-
-        # 2. Build self-model
-        sm = SelfModel.from_workspace(ws)
-
-        # 3. Planner decides mode
-        pd = planner.decide(ws, sm, remaining_budget=remaining)
-
-        # 4. Controller decides action
-        ctrl_action = controller.decide(ws, remaining_budget=remaining,
-                                         has_valid_queries=True)
-
-        # Print trace
-        print(f"\n-- Turn {turn+1}/{budget} --")
-        print(f"  Entropy:     {ws.entropy:.3f}")
-        print(f"  Margin:      {ws.confidence_margin:.3f}")
-        print(f"  Trust:       {'LOCKED' if ws.trusted_source_locked else 'OPEN'}")
-        print(f"  Active Hyps: {len([h for h, p in ws.all_hypotheses if p > 0])}")
-        print(f"  SelfModel:   {sm.confidence_description}")
-        print(f"  Planner:     {pd.mode.value}")
-        print(f"  Rationale:   {pd.rationale}")
-        print(f"  Recommend:   {pd.recommendation}")
-        print(f"  Controller:  {ctrl_action}")
-
-        # If planner says EARLY_COMMIT or ESCALATE, stop querying
-        if pd.mode.value in ("EARLY_COMMIT", "ESCALATE"):
-            print(f"\n  >>> Planner triggered {pd.mode.value}. Stopping queries.")
-            queries_used = turn
-            break
-
-        # Execute query
-        source, item = engine.select_query({
-            'remaining_turns': remaining,
-            'queried_pairs': queried_pairs,
-        })
-        action = {"type": "query", "target_agent": source, "item_id": item}
-        obs = env.step(action)
-        queried_pairs.add((source, item))
-
-        if "reported_quantity" in obs:
-            engine.update_observation(source, item, obs["reported_quantity"], t=turn)
-
-        print(f"  Query:       ({source}, {item}) → {obs.get('reported_quantity', '?')}")
-        queries_used = turn + 1
-    else:
-        # Budget fully consumed
-        pass
-
-    # Final commit
-    proposed = engine.propose_state()
-    commit_action = {"type": "commit_consensus", "proposed_inventory": proposed}
-    result = env.step(commit_action)
+    for i, entry in enumerate(trajectory):
+        mode = entry.get("planner_mode", "UNKNOWN")
+        act = entry.get("next_action", {})
+        
+        print(f"\n-- Turn {i+1} --")
+        print(f"  Planner:   {mode}")
+        if act.get("type") == "query":
+            print(f"  Action:    QUERY ({act.get('target_agent')}, {act.get('item_id')})")
+        elif act.get("type") == "commit_consensus":
+            if act.get("escalated"):
+                print(f"  Action:    ESCALATE")
+            else:
+                print(f"  Action:    COMMIT")
 
     diff = result.get("true_state_diff", {})
     incorrect = len(diff)
@@ -111,11 +59,11 @@ def run_traced_episode(seed=12345, budget=8):
 
     print(f"\n{'='*70}")
     print(f"RESULT: {correct}/{total} correct ({accuracy:.1%} accuracy)")
-    print(f"Queries used: {queries_used}/{budget}")
+    print(f"Queries used: {len(trajectory)-1}/{budget}")
     print("*(Note: Final commit resolves ties stochastically if ambiguity remains)*")
     print(f"{'='*70}")
 
-    return accuracy, queries_used
+    return accuracy, len(trajectory)-1
 
 
 if __name__ == "__main__":

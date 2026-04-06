@@ -10,7 +10,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-from deic_core import DEIC, cyber_generator, BeliefInspector, CommitController
+from deic_core import DEIC, cyber_generator, BeliefInspector, CommitController, MinimalPlanner, SelfModel
 
 
 class CyberDEICAdapter:
@@ -22,9 +22,10 @@ class CyberDEICAdapter:
       baseline -> initial_values
     """
 
-    def __init__(self, adaptive_trust=True, use_controller=False, memory=None):
+    def __init__(self, adaptive_trust=True, use_controller=False, use_planner=False, memory=None):
         self.adaptive_trust = adaptive_trust
         self.use_controller = use_controller
+        self.use_planner = use_planner
         self.memory = memory
 
     def diagnose(self, env):
@@ -40,7 +41,9 @@ class CyberDEICAdapter:
             memory=self.memory
         )
 
-        if self.use_controller:
+        if self.use_planner:
+            return self._diagnose_with_planner(env, engine, budget)
+        elif self.use_controller:
             return self._diagnose_with_controller(env, engine, budget)
         else:
             return self._diagnose_legacy(env, engine, budget)
@@ -118,6 +121,65 @@ class CyberDEICAdapter:
                 })
                 result = env.query(monitor, service)
                 queried_pairs.add((monitor, service))
+
+                if result.get("status") == "timeout":
+                    pass
+                elif "reported_latency" in result:
+                    engine.update_observation(
+                        monitor, service, result["reported_latency"], env.turn
+                    )
+                    if engine._trusted_source is None and not self.adaptive_trust:
+                        engine.update_trust()
+
+    def _diagnose_with_planner(self, env, engine, budget):
+        queried_pairs = set()
+        inspector = BeliefInspector(engine)
+        planner = MinimalPlanner()
+        item_queries = {it: set() for it in engine._items}
+        monitors = env.get_monitors()
+
+        while True:
+            remaining = budget - 1 - env.turn
+            ws = inspector.workspace()
+            sm = SelfModel.from_workspace(ws)
+            decision = planner.decide(ws, sm, max(0, remaining))
+            mode = decision.mode.value
+
+            if mode in ("EARLY_COMMIT", "ESCALATE"):
+                proposed = engine.propose_state()
+                return env.submit_diagnosis(proposed)
+            
+            elif mode in ("EXPLORE", "REFINE"):
+                monitor, service = None, None
+                
+                if mode == "EXPLORE":
+                    target_item = None
+                    for it, ags in item_queries.items():
+                        if 0 < len(ags) < len(monitors):
+                            target_item = it
+                            break
+                    if not target_item:
+                        for it, ags in item_queries.items():
+                            if len(ags) < len(monitors):
+                                target_item = it
+                                break
+                    if not target_item:
+                        target_item = engine._items[0]
+                        
+                    available_agents = [a for a in monitors if a not in item_queries[target_item]]
+                    if not available_agents:
+                        available_agents = monitors
+                    monitor = available_agents[0]
+                    service = target_item
+                else: 
+                    monitor, service = engine.select_query({
+                        'remaining_turns': remaining,
+                        'queried_pairs': queried_pairs,
+                    })
+
+                result = env.query(monitor, service)
+                queried_pairs.add((monitor, service))
+                item_queries[service].add(monitor)
 
                 if result.get("status") == "timeout":
                     pass
