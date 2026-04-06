@@ -2,14 +2,15 @@
 Cyber Incident Adapter for DEIC
 
 Bridges the CyberIncidentEnvironment to the domain-agnostic
-DEIC engine. DEIC core.py is used without any modifications.
+DEIC engine. Uses CyberHypothesisGenerator for domain-specific
+hypothesis setup.
 """
 
 import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-from deic_core import DEIC
+from deic_core import DEIC, cyber_generator
 
 
 class CyberDEICAdapter:
@@ -30,15 +31,11 @@ class CyberDEICAdapter:
         monitors = env.get_monitors()
         budget = env.config.max_queries
 
-        # Initialize DEIC with cyber domain parameters
         engine = DEIC(adaptive_trust=self.adaptive_trust)
-        engine.initialize_beliefs({
-            'items': services,
-            'sources': monitors,
-            'group_size': 4,
-            'valid_multipliers': [1.5, 2.0, 3.0, 5.0],
-            'initial_values': baseline,
-        })
+        engine.initialize_beliefs(
+            {'items': services, 'sources': monitors, 'initial_values': baseline},
+            hypothesis_generator=cyber_generator(),
+        )
 
         queried_pairs = set()
 

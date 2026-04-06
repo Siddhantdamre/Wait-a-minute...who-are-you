@@ -1,21 +1,15 @@
 """
-Clinical Adapter for DEIC (Zero Modification)
+Clinical Adapter for DEIC
 
 Bridges ClinicalEnvironment to the domain-agnostic DEIC engine.
-DEIC core.py is used WITHOUT any changes.
-
-IMPORTANT: DEIC assumes group_size=4 (fixed partition).
-The clinical domain has variable deteriorating group sizes (2-6).
-This adapter passes group_size=4 because DEIC's API requires it.
-The purpose of this test is to see what happens when that
-assumption is wrong.
+Uses ClinicalHypothesisGenerator for variable group-size support.
 """
 
 import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-from deic_core import DEIC
+from deic_core import DEIC, clinical_generator
 
 
 class ClinicalDEICAdapter:
@@ -25,10 +19,6 @@ class ClinicalDEICAdapter:
       station  -> source
       vitals   -> value
       baseline -> initial_values
-
-    NOTE: group_size is hardcoded to 4, matching DEIC's
-    current assumption. The clinical environment generates
-    variable groups (2-6). This mismatch is the test.
     """
 
     def __init__(self, adaptive_trust=True):
@@ -41,13 +31,10 @@ class ClinicalDEICAdapter:
         budget = env.config.max_queries
 
         engine = DEIC(adaptive_trust=self.adaptive_trust)
-        engine.initialize_beliefs({
-            'items': patients,
-            'sources': stations,
-            'group_sizes': [2, 3, 4, 5, 6],        # Variable group sizes
-            'valid_multipliers': [1.3, 1.8, 2.5],
-            'initial_values': baseline,
-        })
+        engine.initialize_beliefs(
+            {'items': patients, 'sources': stations, 'initial_values': baseline},
+            hypothesis_generator=clinical_generator(),
+        )
 
         queried_pairs = set()
 
