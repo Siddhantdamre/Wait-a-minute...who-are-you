@@ -1,0 +1,36 @@
+.....                                                                    [100%]
+============================== warnings summary ===============================
+tests/test_golden_c6.py::test_budget_8
+  C:\Python\lib\site-packages\_pytest\python.py:170: PytestReturnNotNoneWarning: Test functions should return None, but tests/test_golden_c6.py::test_budget_8 returned <class 'float'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+tests/test_golden_c6.py::test_budget_12
+  C:\Python\lib\site-packages\_pytest\python.py:170: PytestReturnNotNoneWarning: Test functions should return None, but tests/test_golden_c6.py::test_budget_12 returned <class 'float'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+tests/test_transfer_regression.py::test_cyber_parity
+  C:\Python\lib\site-packages\_pytest\python.py:170: PytestReturnNotNoneWarning: Test functions should return None, but tests/test_transfer_regression.py::test_cyber_parity returned <class 'float'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+tests/test_transfer_regression.py::test_clinical_budget8
+  C:\Python\lib\site-packages\_pytest\python.py:170: PytestReturnNotNoneWarning: Test functions should return None, but tests/test_transfer_regression.py::test_clinical_budget8 returned <class 'float'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+tests/test_transfer_regression.py::test_clinical_budget12
+  C:\Python\lib\site-packages\_pytest\python.py:170: PytestReturnNotNoneWarning: Test functions should return None, but tests/test_transfer_regression.py::test_clinical_budget12 returned <class 'float'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+5 passed, 5 warnings in 4.96s
+
+Errors:

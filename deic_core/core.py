@@ -44,7 +44,7 @@ class DEIC:
     # ------------------------------------------------------------------
     # API: initialize_beliefs
     # ------------------------------------------------------------------
-    def initialize_beliefs(self, env_spec, hypothesis_generator=None):
+    def initialize_beliefs(self, env_spec, hypothesis_generator=None, memory=None):
         """
         Prepare the hypothesis bank for a new episode.
 
@@ -98,6 +98,11 @@ class DEIC:
                         self._hypotheses.append({
                             'S': set(S), 'm': m, 'prob': 1.0
                         })
+
+        if memory is not None:
+            priors = memory.prior_bias(self._hypotheses)
+            for i, h in enumerate(self._hypotheses):
+                h['prob'] = priors[i]
 
         self._normalize()
 

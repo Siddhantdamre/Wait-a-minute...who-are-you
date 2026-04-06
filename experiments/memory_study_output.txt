@@ -1,0 +1,54 @@
+# DEIC Cross-Episode Memory — Empirical Study
+
+- Episodes per condition: 30
+- Shift point: episode 15
+- Seeds: 10000–10029 (locked across OFF/ON)
+- Memory update policy: **after successful episodes only**
+- Controller: enabled (use_controller=True)
+
+
+### C6
+| Regime | Condition | Accuracy | Avg Budget | Avg Commit Step | Escalation | Recovery (first 5 post-shift) |
+|--------|-----------|----------|------------|-----------------|------------|-------------------------------|
+| stationary | Memory OFF  | 43.3%    | 7.67       | 6.67            | 60.0%      | —                             |
+| stationary | Memory ON   | 50.0%    | 7.67       | 6.67            | 60.0%      | —                             |
+| shifted    | Memory OFF  | 56.7%    | 7.67       | 6.67            | 60.0%      | 80.0%                         |
+| shifted    | Memory ON   | 53.3%    | 7.67       | 6.67            | 60.0%      | 80.0%                         |
+
+### Cyber
+| Regime | Condition | Accuracy | Avg Budget | Avg Commit Step | Escalation | Recovery (first 5 post-shift) |
+|--------|-----------|----------|------------|-----------------|------------|-------------------------------|
+| stationary | Memory OFF  | 46.7%    | 6.87       | 5.87            | N/A        | —                             |
+| stationary | Memory ON   | 46.7%    | 6.87       | 5.87            | N/A        | —                             |
+| shifted    | Memory OFF  | 43.3%    | 6.87       | 5.87            | N/A        | 40.0%                         |
+| shifted    | Memory ON   | 53.3%    | 6.87       | 5.87            | N/A        | 60.0%                         |
+
+### Clinical
+| Regime | Condition | Accuracy | Avg Budget | Avg Commit Step | Escalation | Recovery (first 5 post-shift) |
+|--------|-----------|----------|------------|-----------------|------------|-------------------------------|
+| stationary | Memory OFF  | 13.3%    | 7.00       | 6.00            | N/A        | —                             |
+| stationary | Memory ON   | 30.0%    | 7.00       | 6.00            | N/A        | —                             |
+| shifted    | Memory OFF  | 13.3%    | 7.00       | 6.00            | N/A        | 0.0%                          |
+| shifted    | Memory ON   | 20.0%    | 7.00       | 6.00            | N/A        | 0.0%                          |
+
+## Summary: Memory OFF vs Memory ON
+| Domain | Regime | OFF Acc | ON Acc | Delta | OFF Budget | ON Budget | OFF Recovery | ON Recovery |
+|--------|--------|---------|--------|-------|------------|-----------|--------------|-------------|
+| C6       | stationary | 43.3%   | 50.0%  | +6.7% | 7.67       | 7.67      | —            | —           |
+| C6       | shifted    | 56.7%   | 53.3%  | -3.3% | 7.67       | 7.67      | 80.0%        | 80.0%       |
+| Cyber    | stationary | 46.7%   | 46.7%  | +0.0% | 6.87       | 6.87      | —            | —           |
+| Cyber    | shifted    | 43.3%   | 53.3%  | +10.0% | 6.87       | 6.87      | 40.0%        | 60.0%       |
+| Clinical | stationary | 13.3%   | 30.0%  | +16.7% | 7.00       | 7.00      | —            | —           |
+| Clinical | shifted    | 13.3%   | 20.0%  | +6.7% | 7.00       | 7.00      | 0.0%         | 0.0%        |
+
+## Technical Verdict
+
+**(a) Does memory help in stationary settings?**
+  YES — average accuracy lift of +7.8% across domains.
+
+**(b) Does memory hurt under distribution shift?**
+  NO — average delta of +4.4%; memory does not measurably hurt.
+
+**(c) Recommendation: default-off, optional, or standard?**
+  OPTIONAL-ON — memory provides benefit and does not hurt under shift. Ship as opt-in default-on.
+

@@ -7,6 +7,12 @@ query budgets.
 """
 
 from .core import DEIC
+from .inspector import BeliefInspector
+from .controller import CommitController
+from .memory import CrossEpisodeMemory
+from .interface import ToolInterface
+from .workspace import CognitiveState
+from .self_model import SelfModel
 from .hypothesis import (
     HypothesisGenerator,
     FixedPartitionGenerator,
@@ -18,6 +24,12 @@ from .hypothesis import (
 
 __all__ = [
     "DEIC",
+    "BeliefInspector",
+    "CommitController",
+    "CrossEpisodeMemory",
+    "ToolInterface",
+    "CognitiveState",
+    "SelfModel",
     "HypothesisGenerator",
     "FixedPartitionGenerator",
     "VariablePartitionGenerator",

@@ -1,0 +1,10 @@
+============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0 -- C:\Python\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\siddh\Projects\Emotion_and_AI
+plugins: anyio-4.10.0, dash-4.1.0
+collecting ... collected 1 item
+
+tests/test_workspace.py::test_goal_after_trust PASSED                    [100%]
+
+============================== 1 passed in 0.04s ==============================
