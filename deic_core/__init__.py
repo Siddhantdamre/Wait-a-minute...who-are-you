@@ -13,6 +13,7 @@ from .memory import CrossEpisodeMemory
 from .interface import ToolInterface
 from .workspace import CognitiveState
 from .self_model import SelfModel
+from .planner import MinimalPlanner, PlannerMode, PlannerDecision
 from .hypothesis import (
     HypothesisGenerator,
     FixedPartitionGenerator,
@@ -30,6 +31,9 @@ __all__ = [
     "ToolInterface",
     "CognitiveState",
     "SelfModel",
+    "MinimalPlanner",
+    "PlannerMode",
+    "PlannerDecision",
     "HypothesisGenerator",
     "FixedPartitionGenerator",
     "VariablePartitionGenerator",

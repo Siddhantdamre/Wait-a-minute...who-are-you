@@ -1,0 +1,293 @@
+﻿git : remote: error: 
+GH013: Repository rule 
+violations found for ref
+s/heads/deic-phase6-stab
+le.        
+At line:1 char:1
++ git push -u origin 
+deic-phase6-stable 2>&1 
+| Out-File -Encoding 
+utf8  ...
++ ~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo      
+        : NotSpecified: 
+(rem    ote: error: 
+...stable.            
+:String) [], R    
+emoteException
+    + 
+FullyQualifiedErrorI    
+d : NativeCommandError
+ 
+remote: 
+remote: - GITHUB PUSH 
+PROTECTION        
+remote:   ΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇö        
+remote:     Resolve the 
+following violations 
+before pushing again    
+    
+remote: 
+remote:     - Push 
+cannot contain secrets  
+      
+remote: 
+remote:             
+remote:      (?) Learn 
+how to resolve a 
+blocked push        
+remote:      https://doc
+s.github.com/code-securi
+ty/secret-scanning/worki
+ng-with-secret-scanning-
+and-push-protection/work
+ing-with-push-protection
+-from-the-command-line#r
+esolving-a-blocked-push 
+       
+remote:             
+remote:             
+remote:       ΓÇöΓÇö 
+Hugging Face User 
+Access Token ΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+ö        
+remote:        
+locations:        
+remote:          - 
+commit: 3a6b4153096abaa6
+2a576e0ccbdc68dcdd72bfe0
+        
+remote:            
+path: hf_token.txt:1    
+    
+remote:             
+remote:        (?) To 
+push, remove secret 
+from commit(s) or 
+follow this URL to 
+allow the secret.       
+ 
+remote:        https://g
+ithub.com/Siddhantdamre/
+AGI/security/secret-scan
+ning/unblock-secret/3Bxh
+p0TUXkVeGetg84YKw4JGyFw 
+       
+remote:             
+remote: 
+remote: 
+To https://github.com/Si
+ddhantdamre/AGI.git
+ ! [remote rejected] 
+deic-phase6-stable -> 
+deic-phase6-stable 
+(push declined due to 
+repository rule 
+violations)
+error: failed to push 
+some refs to 'https://gi
+thub.com/Siddhantdamre/A
+GI.git'
+git : fatal: tag 
+'v1.3.1-deic-self-model' 
+already exists
+At line:1 char:87
++ ...  push_phase6.txt; 
+git tag 
+v1.3.1-deic-self-model 
+ce4b5a7 2>&1 | Out-F ...
++                       ~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (fat  
+  al: tag 'v1.... alread   
+ y exists:String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+git : remote: error: 
+GH013: Repository rule 
+violations found for refs/t
+ags/v1.3.1-deic-self-model.
+        
+At line:1 char:182
++ ...  push_phase6.txt; 
+git push origin 
+v1.3.1-deic-self-model 
+2>&1 | Out-F ...
++                       ~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (rem  
+  ote: error: ...-model.   
+         :String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+remote: 
+remote: - GITHUB PUSH 
+PROTECTION        
+remote:   ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö  
+      
+remote:     Resolve the 
+following violations 
+before pushing again       
+ 
+remote: 
+remote:     - Push cannot 
+contain secrets        
+remote: 
+remote:             
+remote:      (?) Learn how 
+to resolve a blocked push  
+      
+remote:      https://docs.g
+ithub.com/code-security/sec
+ret-scanning/working-with-s
+ecret-scanning-and-push-pro
+tection/working-with-push-p
+rotection-from-the-command-
+line#resolving-a-blocked-pu
+sh        
+remote:             
+remote:             
+remote:       ΓÇöΓÇö 
+Hugging Face User Access 
+Token ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö
+ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö
+ΓÇöΓÇöΓÇöΓÇö        
+remote:        locations:  
+      
+remote:          - commit: 
+3a6b4153096abaa62a576e0ccbd
+c68dcdd72bfe0        
+remote:            path: 
+hf_token.txt:1        
+remote:             
+remote:        (?) To 
+push, remove secret from 
+commit(s) or follow this 
+URL to allow the secret.   
+     
+remote:        https://gith
+ub.com/Siddhantdamre/AGI/se
+curity/secret-scanning/unbl
+ock-secret/3Bxhp0TUXkVeGetg
+84YKw4JGyFw        
+remote:             
+remote: 
+remote: 
+To https://github.com/Siddh
+antdamre/AGI.git
+ ! [remote rejected] 
+v1.3.1-deic-self-model -> 
+v1.3.1-deic-self-model 
+(push declined due to 
+repository rule violations)
+error: failed to push some 
+refs to 'https://github.com
+/Siddhantdamre/AGI.git'
+git : remote: error: 
+GH013: Repository rule 
+violations found for refs/h
+eads/deic-minimal-planner. 
+       
+At line:1 char:277
++ ... push_phase6.txt; git 
+push -u origin 
+deic-minimal-planner 2>&1 
+| Out-F ...
++                      ~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (rem  
+  ote: error: ...lanner.   
+         :String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+remote: 
+remote: - GITHUB PUSH 
+PROTECTION        
+remote:   ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö  
+      
+remote:     Resolve the 
+following violations 
+before pushing again       
+ 
+remote: 
+remote:     - Push cannot 
+contain secrets        
+remote: 
+remote:             
+remote:      (?) Learn how 
+to resolve a blocked push  
+      
+remote:      https://docs.g
+ithub.com/code-security/sec
+ret-scanning/working-with-s
+ecret-scanning-and-push-pro
+tection/working-with-push-p
+rotection-from-the-command-
+line#resolving-a-blocked-pu
+sh        
+remote:             
+remote:             
+remote:       ΓÇöΓÇö 
+Hugging Face User Access 
+Token ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö
+ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö
+ΓÇöΓÇöΓÇöΓÇö        
+remote:        locations:  
+      
+remote:          - commit: 
+3a6b4153096abaa62a576e0ccbd
+c68dcdd72bfe0        
+remote:            path: 
+hf_token.txt:1        
+remote:             
+remote:        (?) To 
+push, remove secret from 
+commit(s) or follow this 
+URL to allow the secret.   
+     
+remote:        https://gith
+ub.com/Siddhantdamre/AGI/se
+curity/secret-scanning/unbl
+ock-secret/3Bxhp0TUXkVeGetg
+84YKw4JGyFw        
+remote:             
+remote: 
+remote: 
+To https://github.com/Siddh
+antdamre/AGI.git
+ ! [remote rejected] 
+deic-minimal-planner -> 
+deic-minimal-planner (push 
+declined due to repository 
+rule violations)
+error: failed to push some 
+refs to 'https://github.com
+/Siddhantdamre/AGI.git'

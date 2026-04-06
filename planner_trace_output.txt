@@ -1,0 +1,139 @@
+﻿======================================================================
+PLANNER TRACE ΓÇö C6 Episode (seed=12345, budget=8)
+======================================================================
+
+-- Turn 1/8 --
+  Entropy:     8.129
+  Margin:      0.000
+  Trust:       OPEN
+  Active Hyps: 280
+  SelfModel:   Minimal/None (0.00 margin)
+  Planner:     EXPLORE
+  Rationale:   Trust phase incomplete. Must identify a reliable source before structural refinement can begin.
+  Recommend:   Query diverse sources on the same item to force divergence and lock trust.
+  Controller:  QUERY
+  Query:       (Node_A, Server_Racks) ΓåÆ 198
+
+-- Turn 2/8 --
+  Entropy:     8.129
+  Margin:      0.000
+  Trust:       OPEN
+  Active Hyps: 280
+  SelfModel:   Minimal/None (0.00 margin)
+  Planner:     EXPLORE
+  Rationale:   Trust phase incomplete. Must identify a reliable source before structural refinement can begin.
+  Recommend:   Query diverse sources on the same item to force divergence and lock trust.
+  Controller:  QUERY
+  Query:       (Node_B, Server_Racks) ΓåÆ 198
+
+-- Turn 3/8 --
+  Entropy:     8.129
+  Margin:      0.000
+  Trust:       OPEN
+  Active Hyps: 280
+  SelfModel:   Minimal/None (0.00 margin)
+  Planner:     EXPLORE
+  Rationale:   Trust phase incomplete. Must identify a reliable source before structural refinement can begin.
+  Recommend:   Query diverse sources on the same item to force divergence and lock trust.
+  Controller:  QUERY
+  Query:       (Node_C, Server_Racks) ΓåÆ 198
+
+-- Turn 4/8 --
+  Entropy:     8.129
+  Margin:      0.000
+  Trust:       OPEN
+  Active Hyps: 280
+  SelfModel:   Minimal/None (0.00 margin)
+  Planner:     EXPLORE
+  Rationale:   Trust phase incomplete. Must identify a reliable source before structural refinement can begin.
+  Recommend:   Query diverse sources on the same item to force divergence and lock trust.
+  Controller:  QUERY
+  Query:       (Node_A, Optical_Switches) ΓåÆ 197
+
+-- Turn 5/8 --
+  Entropy:     8.129
+  Margin:      0.000
+  Trust:       OPEN
+  Active Hyps: 280
+  SelfModel:   Minimal/None (0.00 margin)
+  Planner:     EXPLORE
+  Rationale:   Trust phase incomplete. Must identify a reliable source before structural refinement can begin.
+  Recommend:   Query diverse sources on the same item to force divergence and lock trust.
+  Controller:  QUERY
+  Query:       (Node_B, Optical_Switches) ΓåÆ 197
+
+-- Turn 6/8 --
+  Entropy:     8.129
+  Margin:      0.000
+  Trust:       OPEN
+  Active Hyps: 280
+  SelfModel:   Minimal/None (0.00 margin)
+  Planner:     EXPLORE
+  Rationale:   Trust phase incomplete. Must identify a reliable source before structural refinement can begin.
+  Recommend:   Query diverse sources on the same item to force divergence and lock trust.
+  Controller:  QUERY
+  Query:       (Node_C, Optical_Switches) ΓåÆ 197
+
+-- Turn 7/8 --
+  Entropy:     8.129
+  Margin:      0.000
+  Trust:       OPEN
+  Active Hyps: 280
+  SelfModel:   Minimal/None (0.00 margin)
+  Planner:     EXPLORE
+  Rationale:   Trust phase incomplete. Must identify a reliable source before structural refinement can begin.
+  Recommend:   Query diverse sources on the same item to force divergence and lock trust.
+  Controller:  QUERY
+  Query:       (Node_A, Cooling_Units) ΓåÆ 33
+
+-- Turn 8/8 --
+  Entropy:     8.129
+  Margin:      0.000
+  Trust:       OPEN
+  Active Hyps: 280
+  SelfModel:   Minimal/None (0.00 margin)
+  Planner:     EXPLORE
+  Rationale:   Trust phase incomplete. Must identify a reliable source before structural refinement can begin.
+  Recommend:   Query diverse sources on the same item to force divergence and lock trust.
+  Controller:  QUERY
+  Query:       (Node_B, Cooling_Units) ΓåÆ 33
+
+======================================================================
+python : Traceback 
+(most recent call last):
+At line:1 char:1
++ python -X utf8 experim
+ents/planner_trace.py 
+2>&1 | Out-File 
+-Encoding ...
++ ~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo      
+        : NotSpecified  
+  : (Traceback (most    
+ recent call last)::    
+String) [], RemoteE    
+xception
+    + FullyQualifiedErr 
+   orId : NativeComman  
+  dError
+ 
+  File "C:\Users\siddh\P
+rojects\Emotion_and_AI\e
+xperiments\planner_trace
+.py", line 119, in 
+<module>
+    run_traced_episode()
+  File "C:\Users\siddh\P
+rojects\Emotion_and_AI\e
+xperiments\planner_trace
+.py", line 111, in 
+run_traced_episode
+    print(f"RESULT: 
+{correct}/{total} 
+correct ({accuracy:.1%} 
+accuracy)")
+ValueError: Unknown 
+format code '%' for 
+object of type 'str'

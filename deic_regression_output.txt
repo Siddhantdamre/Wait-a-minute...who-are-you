@@ -1,0 +1,106 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0 -- C:\Python\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\siddh\Projects\Emotion_and_AI
+plugins: anyio-4.10.0, dash-4.1.0
+collecting ... collected 44 items
+
+tests/test_golden_c6.py::test_budget_8 FAILED                            [  2%]
+tests/test_golden_c6.py::test_budget_12 PASSED                           [  4%]
+tests/test_transfer_regression.py::test_cyber_parity PASSED              [  6%]
+tests/test_transfer_regression.py::test_clinical_budget8 PASSED          [  9%]
+tests/test_transfer_regression.py::test_clinical_budget12 PASSED         [ 11%]
+tests/test_inspector.py::test_inspector_initial_state PASSED             [ 13%]
+tests/test_inspector.py::test_inspector_trust_locked PASSED              [ 15%]
+tests/test_inspector.py::test_inspector_posterior_collapsed PASSED       [ 18%]
+tests/test_inspector.py::test_inspector_non_adaptive_rationale PASSED    [ 20%]
+tests/test_controller.py::test_rule1_high_confidence PASSED              [ 22%]
+tests/test_controller.py::test_rule2_structural_completion PASSED        [ 25%]
+tests/test_controller.py::test_rule3_budget_exhausted PASSED             [ 27%]
+tests/test_controller.py::test_rule4_escalation PASSED                   [ 29%]
+tests/test_controller.py::test_rule5_stop PASSED                         [ 31%]
+tests/test_controller.py::test_rule6_query PASSED                        [ 34%]
+tests/test_memory.py::test_memory_no_action_by_default PASSED            [ 36%]
+tests/test_memory.py::test_memory_affects_priors PASSED                  [ 38%]
+tests/test_interface.py::test_tool_interface PASSED                      [ 40%]
+tests/test_interface.py::test_interface_not_implemented PASSED           [ 43%]
+tests/test_self_model.py::test_self_model_basic PASSED                   [ 45%]
+tests/test_self_model.py::test_confidence_descriptors PASSED             [ 47%]
+tests/test_self_model.py::test_counterfactual_trigger_item PASSED        [ 50%]
+tests/test_self_model.py::test_counterfactual_trigger_multiplier PASSED  [ 52%]
+tests/test_self_model.py::test_limitation_warning PASSED                 [ 54%]
+tests/test_self_model.py::test_trust_summary PASSED                      [ 56%]
+tests/test_workspace.py::test_workspace_matches_inspector PASSED         [ 59%]
+tests/test_workspace.py::test_controller_accepts_workspace PASSED        [ 61%]
+tests/test_workspace.py::test_controller_accepts_dict PASSED             [ 63%]
+tests/test_workspace.py::test_workspace_with_memory PASSED               [ 65%]
+tests/test_workspace.py::test_workspace_without_memory PASSED            [ 68%]
+tests/test_workspace.py::test_goal_trust_phase PASSED                    [ 70%]
+tests/test_workspace.py::test_goal_after_trust PASSED                    [ 72%]
+tests/test_workspace.py::test_workspace_item_counts PASSED               [ 75%]
+tests/test_workspace.py::test_workspace_to_dict PASSED                   [ 77%]
+tests/test_workspace.py::test_workspace_dict_access PASSED               [ 79%]
+tests/test_planner.py::test_r1_escalate_budget_zero_high_entropy PASSED  [ 81%]
+tests/test_planner.py::test_r2_commit_budget_zero_low_entropy PASSED     [ 84%]
+tests/test_planner.py::test_r3_early_commit_high_confidence PASSED       [ 86%]
+tests/test_planner.py::test_r4_early_commit_single_hypothesis PASSED     [ 88%]
+tests/test_planner.py::test_r5_explore_no_trust PASSED                   [ 90%]
+tests/test_planner.py::test_r6_refine_trust_locked_ambiguous PASSED      [ 93%]
+tests/test_planner.py::test_r7_fallback_commit PASSED                    [ 95%]
+tests/test_planner.py::test_custom_threshold_tighter PASSED              [ 97%]
+tests/test_planner.py::test_rationale_always_present PASSED              [100%]
+
+================================== FAILURES ===================================
+________________________________ test_budget_8 ________________________________
+
+    def test_budget_8():
+        seeds = [700000, 800000, 900000]
+        n = 100
+        accs = []
+        for seed in seeds:
+            adapter = DEICBenchmarkAdapter(adaptive_trust=True)
+            acc = run_c6_accuracy(adapter, n, budget=8, seed_offset=seed)
+            accs.append(acc)
+            print(f"  Budget=8, Seed={seed}: {acc*100:.1f}%")
+    
+        avg = sum(accs) / len(accs)
+        print(f"  Budget=8 Average: {avg*100:.1f}%")
+>       assert 0.55 <= avg <= 0.68, f"REGRESSION FAILURE: Budget=8 avg={avg*100:.1f}% outside [55.0%, 68.0%]"
+E       AssertionError: REGRESSION FAILURE: Budget=8 avg=53.7% outside [55.0%, 68.0%]
+E       assert 0.55 <= 0.5366666666666666
+
+tests\test_golden_c6.py:60: AssertionError
+---------------------------- Captured stdout call -----------------------------
+  Budget=8, Seed=700000: 58.0%
+  Budget=8, Seed=800000: 49.0%
+  Budget=8, Seed=900000: 54.0%
+  Budget=8 Average: 53.7%
+============================== warnings summary ===============================
+tests/test_golden_c6.py::test_budget_12
+  C:\Python\lib\site-packages\_pytest\python.py:170: PytestReturnNotNoneWarning: Test functions should return None, but tests/test_golden_c6.py::test_budget_12 returned <class 'float'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+tests/test_transfer_regression.py::test_cyber_parity
+  C:\Python\lib\site-packages\_pytest\python.py:170: PytestReturnNotNoneWarning: Test functions should return None, but tests/test_transfer_regression.py::test_cyber_parity returned <class 'float'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+tests/test_transfer_regression.py::test_clinical_budget8
+  C:\Python\lib\site-packages\_pytest\python.py:170: PytestReturnNotNoneWarning: Test functions should return None, but tests/test_transfer_regression.py::test_clinical_budget8 returned <class 'float'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+tests/test_transfer_regression.py::test_clinical_budget12
+  C:\Python\lib\site-packages\_pytest\python.py:170: PytestReturnNotNoneWarning: Test functions should return None, but tests/test_transfer_regression.py::test_clinical_budget12 returned <class 'float'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_golden_c6.py::test_budget_8 - AssertionError: REGRESSION FA...
+================== 1 failed, 43 passed, 4 warnings in 4.85s ===================

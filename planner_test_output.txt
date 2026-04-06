@@ -1,0 +1,41 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0 -- C:\Python\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\siddh\Projects\Emotion_and_AI
+plugins: anyio-4.10.0, dash-4.1.0
+collecting ... collected 9 items
+
+tests/test_planner.py::test_r1_escalate_budget_zero_high_entropy PASSED  [ 11%]
+tests/test_planner.py::test_r2_commit_budget_zero_low_entropy PASSED     [ 22%]
+tests/test_planner.py::test_r3_early_commit_high_confidence PASSED       [ 33%]
+tests/test_planner.py::test_r4_early_commit_single_hypothesis FAILED     [ 44%]
+tests/test_planner.py::test_r5_explore_no_trust PASSED                   [ 55%]
+tests/test_planner.py::test_r6_refine_trust_locked_ambiguous PASSED      [ 66%]
+tests/test_planner.py::test_r7_fallback_commit PASSED                    [ 77%]
+tests/test_planner.py::test_custom_threshold_tighter PASSED              [ 88%]
+tests/test_planner.py::test_rationale_always_present PASSED              [100%]
+
+================================== FAILURES ===================================
+___________________ test_r4_early_commit_single_hypothesis ____________________
+
+    def test_r4_early_commit_single_hypothesis():
+        ws = _make_ws(
+            entropy=0.0,
+            confidence_margin=1.0,
+            trusted_source_locked=True,
+            all_hypotheses=[({'shifted_items': frozenset(), 'multiplier': 1.5}, 1.0)],
+        )
+        sm = _make_sm(ws)
+        planner = MinimalPlanner()
+        d = planner.decide(ws, sm, remaining_budget=4)
+        assert d.mode == PlannerMode.EARLY_COMMIT
+>       assert "collapsed" in d.rationale.lower()
+E       AssertionError: assert 'collapsed' in 'confidence margin=1.00 (\u22650.95) with entropy=0.000 (<0.10). further queries unlikely to change outcome.'
+E        +  where 'confidence margin=1.00 (\u22650.95) with entropy=0.000 (<0.10). further queries unlikely to change outcome.' = <built-in method lower of str object at 0x00000223B56CE310>()
+E        +    where <built-in method lower of str object at 0x00000223B56CE310> = 'Confidence margin=1.00 (\u22650.95) with entropy=0.000 (<0.10). Further queries unlikely to change outcome.'.lower
+E        +      where 'Confidence margin=1.00 (\u22650.95) with entropy=0.000 (<0.10). Further queries unlikely to change outcome.' = PlannerDecision(mode=<PlannerMode.EARLY_COMMIT: 'EARLY_COMMIT'>, rationale='Confidence margin=1.00 (\u22650.95) with entropy=0.000 (<0.10). Further queries unlikely to change outcome.', recommendation='Commit now; 4 queries saved.').rationale
+
+tests\test_planner.py:88: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_planner.py::test_r4_early_commit_single_hypothesis - Assert...
+========================= 1 failed, 8 passed in 0.41s =========================

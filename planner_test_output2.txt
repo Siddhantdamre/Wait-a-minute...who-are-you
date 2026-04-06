@@ -1,0 +1,18 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0 -- C:\Python\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\siddh\Projects\Emotion_and_AI
+plugins: anyio-4.10.0, dash-4.1.0
+collecting ... collected 9 items
+
+tests/test_planner.py::test_r1_escalate_budget_zero_high_entropy PASSED  [ 11%]
+tests/test_planner.py::test_r2_commit_budget_zero_low_entropy PASSED     [ 22%]
+tests/test_planner.py::test_r3_early_commit_high_confidence PASSED       [ 33%]
+tests/test_planner.py::test_r4_early_commit_single_hypothesis PASSED     [ 44%]
+tests/test_planner.py::test_r5_explore_no_trust PASSED                   [ 55%]
+tests/test_planner.py::test_r6_refine_trust_locked_ambiguous PASSED      [ 66%]
+tests/test_planner.py::test_r7_fallback_commit PASSED                    [ 77%]
+tests/test_planner.py::test_custom_threshold_tighter PASSED              [ 88%]
+tests/test_planner.py::test_rationale_always_present PASSED              [100%]
+
+============================== 9 passed in 0.06s ==============================

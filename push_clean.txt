@@ -1,0 +1,113 @@
+﻿git : remote: 
+At line:1 char:1
++ git push --force 
+origin 
+deic-phase6-stable 2>&1 
+| Out-File -Encoding  
+...
++ ~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
+~
+    + CategoryInfo      
+        : NotSpecified: 
+(rem    ote: :String) 
+[], Remo    teException
+    + 
+FullyQualifiedErrorI    
+d : NativeCommandError
+ 
+remote: Create a pull 
+request for 
+'deic-phase6-stable' on 
+GitHub by visiting:     
+   
+remote:      https://git
+hub.com/Siddhantdamre/AG
+I/pull/new/deic-phase6-s
+table        
+remote: 
+To https://github.com/Si
+ddhantdamre/AGI.git
+ * [new branch]      
+deic-phase6-stable -> 
+deic-phase6-stable
+git : remote: 
+At line:1 char:91
++ ... _clean.txt; git push 
+--force origin 
+deic-minimal-planner 2>&1 
+| Out-F ...
++                 ~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (rem  
+  ote: :String) [], Remo   
+ teException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+remote: Create a pull 
+request for 
+'deic-minimal-planner' on 
+GitHub by visiting:        
+remote:      https://github
+.com/Siddhantdamre/AGI/pull
+/new/deic-minimal-planner  
+      
+remote: 
+To https://github.com/Siddh
+antdamre/AGI.git
+ * [new branch]      
+deic-minimal-planner -> 
+deic-minimal-planner
+git : To https://github.com
+/Siddhantdamre/AGI.git
+At line:1 char:191
++ ... ing utf8 -Append 
+push_clean.txt; git push 
+--force --tags 2>&1 | 
+Out-F ...
++                          
+            ~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (To   
+  https://gith...ntdamre   
+ /AGI.git:String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+ * [new tag]         
+gate1-zero-change-clinical 
+-> 
+gate1-zero-change-clinical
+ * [new tag]         
+gate2-variable-group-sizes 
+-> 
+gate2-variable-group-sizes
+ * [new tag]         hypoth
+esis-generator-framework 
+-> hypothesis-generator-fra
+mework
+ * [new tag]         v1.0-d
+eic-benchmark-transfer -> v
+1.0-deic-benchmark-transfer
+ * [new tag]         
+v1.1-deic-roadmap -> 
+v1.1-deic-roadmap
+ * [new tag]         v1.1-d
+eic-transfer-generalization
+ -> v1.1-deic-transfer-gene
+ralization
+ * [new tag]         v1.2-d
+eic-hypothesis-framework 
+-> v1.2-deic-hypothesis-fra
+mework
+ * [new tag]         
+v1.3-deic-self-model -> 
+v1.3-deic-self-model
+ * [new tag]         
+v1.3.1-deic-self-model -> 
+v1.3.1-deic-self-model

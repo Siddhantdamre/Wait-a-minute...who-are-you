@@ -1,0 +1,104 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0 -- C:\Python\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\siddh\Projects\Emotion_and_AI
+plugins: anyio-4.10.0, dash-4.1.0
+collecting ... collected 44 items / 9 errors
+
+=================================== ERRORS ====================================
+_________________ ERROR collecting tests/test_graph_smoke.py __________________
+ImportError while importing test module 'C:\Users\siddh\Projects\Emotion_and_AI\tests\test_graph_smoke.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Python\lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests\test_graph_smoke.py:1: in <module>
+    from core.narrative import StoryArc
+E   ImportError: cannot import name 'StoryArc' from 'core.narrative' (C:\Users\siddh\Projects\Emotion_and_AI\core\narrative.py)
+______________ ERROR collecting tests/test_interactive_smoke.py _______________
+ImportError while importing test module 'C:\Users\siddh\Projects\Emotion_and_AI\tests\test_interactive_smoke.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Python\lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests\test_interactive_smoke.py:1: in <module>
+    from core.agent import StoryAgent
+core\agent.py:8: in <module>
+    import wikipediaapi
+E   ModuleNotFoundError: No module named 'wikipediaapi'
+_______________ ERROR collecting tests/test_narrative_smoke.py ________________
+ImportError while importing test module 'C:\Users\siddh\Projects\Emotion_and_AI\tests\test_narrative_smoke.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Python\lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests\test_narrative_smoke.py:5: in <module>
+    from core.agent import StoryAgent
+core\agent.py:8: in <module>
+    import wikipediaapi
+E   ModuleNotFoundError: No module named 'wikipediaapi'
+___________________ ERROR collecting tests/test_output.txt ____________________
+C:\Python\lib\pathlib.py:1135: in read_text
+    return f.read()
+C:\Python\lib\codecs.py:322: in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+E   UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+_______________ ERROR collecting tests/test_storyboard_smoke.py _______________
+ImportError while importing test module 'C:\Users\siddh\Projects\Emotion_and_AI\tests\test_storyboard_smoke.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Python\lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests\test_storyboard_smoke.py:1: in <module>
+    from core.narrative import StoryArc
+E   ImportError: cannot import name 'StoryArc' from 'core.narrative' (C:\Users\siddh\Projects\Emotion_and_AI\core\narrative.py)
+______________ ERROR collecting tests/test_value_graph_smoke.py _______________
+ImportError while importing test module 'C:\Users\siddh\Projects\Emotion_and_AI\tests\test_value_graph_smoke.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Python\lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests\test_value_graph_smoke.py:1: in <module>
+    from core.narrative import StoryArc
+E   ImportError: cannot import name 'StoryArc' from 'core.narrative' (C:\Users\siddh\Projects\Emotion_and_AI\core\narrative.py)
+______________ ERROR collecting tests/test_verification_smoke.py ______________
+ImportError while importing test module 'C:\Users\siddh\Projects\Emotion_and_AI\tests\test_verification_smoke.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Python\lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests\test_verification_smoke.py:1: in <module>
+    from core.narrative import StoryArc
+E   ImportError: cannot import name 'StoryArc' from 'core.narrative' (C:\Users\siddh\Projects\Emotion_and_AI\core\narrative.py)
+_________________ ERROR collecting tests/test_vision_smoke.py _________________
+ImportError while importing test module 'C:\Users\siddh\Projects\Emotion_and_AI\tests\test_vision_smoke.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Python\lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests\test_vision_smoke.py:1: in <module>
+    from perception.vision import BlipVision
+perception.py:1: in <module>
+    from transformers import pipeline
+E   ModuleNotFoundError: No module named 'transformers'
+_________________ ERROR collecting tests/test_voice_smoke.py __________________
+ImportError while importing test module 'C:\Users\siddh\Projects\Emotion_and_AI\tests\test_voice_smoke.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Python\lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests\test_voice_smoke.py:1: in <module>
+    from core.narrative import StoryArc
+E   ImportError: cannot import name 'StoryArc' from 'core.narrative' (C:\Users\siddh\Projects\Emotion_and_AI\core\narrative.py)
+=========================== short test summary info ===========================
+ERROR tests/test_graph_smoke.py
+ERROR tests/test_interactive_smoke.py
+ERROR tests/test_narrative_smoke.py
+ERROR tests/test_output.txt - UnicodeDecodeError: 'utf-8' codec can't decode ...
+ERROR tests/test_storyboard_smoke.py
+ERROR tests/test_value_graph_smoke.py
+ERROR tests/test_verification_smoke.py
+ERROR tests/test_vision_smoke.py
+ERROR tests/test_voice_smoke.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 9 errors during collection !!!!!!!!!!!!!!!!!!!
+============================== 9 errors in 1.78s ==============================

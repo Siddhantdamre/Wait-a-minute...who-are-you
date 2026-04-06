@@ -1,0 +1,20 @@
+﻿* ce4b5a7 (HEAD -> main) Complete Phase 6: self-model layer, samples, and verified regressions
+* f037333 Final session state export (SESSION_STATE.md) archiving AGI roadmap and empirical evidence.
+* 4d44da7 Archive legacy results files into results/legacy/ directory to clean up root.
+* 3dba55b Archive session research results (Gate 1/2, v1.1/v1.2) into RESEARCH_LOG.md
+* e02075b v1.2: update PROJECT_LOG with Milestone 8
+* 8852a0d Hypothesis Generator Framework: extract domain-specific hypothesis setup from DEIC core
+* e2643f8 Add DEIC Program AGI roadmap (DEIC_ROADMAP.md)
+* bb69571 DEIC v1.1: variable-group hypothesis generation, clinical transfer recovery, transfer regression suite, updated docs
+* fa6df9a Gate 2: variable group_sizes in initialize_beliefs (clinical: 0%->48%, C6: PASS, cyber: stable)
+* b439807 Gate 1: zero-modification clinical transfer (DEIC unchanged, 56.6% on gs=4, 0.0% on gs!=4)
+* 3a6b415 Finalize DEIC v1.0: benchmark, extraction, regression, and cyber transfer
+* 4c02bcd (origin/main, origin/HEAD) Add files via upload
+* 0070b6d (tag: v1.3-deic-self-model) Complete Phase 6: self-model layer, samples, and verified regressions
+* f39fd5e Final session state export (SESSION_STATE.md) archiving AGI roadmap and empirical evidence.
+* 4fb1288 Archive legacy results files into results/legacy/ directory to clean up root.
+* 3405db7 Archive session research results (Gate 1/2, v1.1/v1.2) into RESEARCH_LOG.md
+* a99dba9 (tag: v1.2-deic-hypothesis-framework) v1.2: update PROJECT_LOG with Milestone 8
+* 883f6d2 (tag: hypothesis-generator-framework) Hypothesis Generator Framework: extract domain-specific hypothesis setup from DEIC core
+* 142237c (tag: v1.1-deic-roadmap) Add DEIC Program AGI roadmap (DEIC_ROADMAP.md)
+* 1b75d11 (tag: v1.1-deic-transfer-generalization) DEIC v1.1: variable-group hypothesis generation, clinical transfer recovery, transfer regression suite, updated docs
