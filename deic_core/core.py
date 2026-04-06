@@ -44,18 +44,26 @@ class DEIC:
     # ------------------------------------------------------------------
     # API: initialize_beliefs
     # ------------------------------------------------------------------
-    def initialize_beliefs(self, env_spec):
+    def initialize_beliefs(self, env_spec, hypothesis_generator=None):
         """
         Prepare the hypothesis bank for a new episode.
 
-        Input:
+        Input (two paths, backward compatible):
+
+        Path 1 — dict only (original API):
             env_spec: dict with keys:
                 'items'             — list of item identifiers
                 'sources'           — list of source/agent identifiers
-                'group_size'        — int, items per latent group (single size)
-                'group_sizes'       — list of int (variable sizes, overrides group_size)
+                'group_size'        — int (single size)
+                'group_sizes'       — list of int (overrides group_size)
                 'valid_multipliers' — list of float shift factors
                 'initial_values'    — dict mapping item -> baseline value
+
+        Path 2 — HypothesisGenerator (new API):
+            env_spec: dict with keys:
+                'items', 'sources', 'initial_values'
+            hypothesis_generator: HypothesisGenerator instance
+                generates the hypothesis bank
 
         Output: None
         State:  Populates internal hypothesis matrix. Resets all
@@ -63,31 +71,34 @@ class DEIC:
         """
         self._items = list(env_spec['items'])
         self._sources = list(env_spec['sources'])
-        self._valid_multipliers = list(env_spec.get('valid_multipliers', [1.2, 1.5, 2.0, 2.5]))
         self._initial_values = dict(env_spec['initial_values'])
-
-        # Support variable group sizes (backward compatible)
-        if 'group_sizes' in env_spec:
-            group_sizes = list(env_spec['group_sizes'])
-        else:
-            group_sizes = [env_spec.get('group_size', 4)]
-        self._group_sizes = group_sizes
 
         self._queried_values = {}
         self._trusted_source = None
         self._source_observations = {s: [] for s in self._sources}
 
-        # Build hypothesis bank across all specified group sizes
-        self._hypotheses = []
-        for gs in group_sizes:
-            all_combos = list(itertools.combinations(self._items, gs))
-            for S in all_combos:
-                for m in self._valid_multipliers:
-                    self._hypotheses.append({
-                        'S': set(S),
-                        'm': m,
-                        'prob': 1.0
-                    })
+        if hypothesis_generator is not None:
+            # New path: use the provided generator
+            self._hypotheses = hypothesis_generator.generate(self._items)
+            self._valid_multipliers = hypothesis_generator.valid_multipliers()
+        else:
+            # Legacy path: build from env_spec dict (backward compatible)
+            self._valid_multipliers = list(env_spec.get(
+                'valid_multipliers', [1.2, 1.5, 2.0, 2.5]
+            ))
+            if 'group_sizes' in env_spec:
+                group_sizes = list(env_spec['group_sizes'])
+            else:
+                group_sizes = [env_spec.get('group_size', 4)]
+
+            self._hypotheses = []
+            for gs in group_sizes:
+                for S in itertools.combinations(self._items, gs):
+                    for m in self._valid_multipliers:
+                        self._hypotheses.append({
+                            'S': set(S), 'm': m, 'prob': 1.0
+                        })
+
         self._normalize()
 
     # ------------------------------------------------------------------
