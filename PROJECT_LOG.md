@@ -74,6 +74,16 @@ This document serves as the official historical ledger tracking the structural e
 
 ---
 
+## 🏆 MILESTONE 8: Hypothesis Generator Framework (v1.2)
+**Status**: `COMPLETED` | **Code**: `deic_core/hypothesis.py`
+
+*   **Architectural Separation:** Extracted domain-specific hypothesis generation from `initialize_beliefs()` into a clean `HypothesisGenerator` protocol with `FixedPartitionGenerator` and `VariablePartitionGenerator` implementations.
+*   **Domain Convenience Constructors:** `benchmark_generator()`, `cyber_generator()`, `clinical_generator()` — each encapsulates a domain's latent structure assumptions.
+*   **Backward Compatibility:** The benchmark adapter still uses the legacy dict API and passes regression unchanged.
+*   **Result:** Adding a new domain now requires writing one generator + one adapter without touching `deic_core/core.py`. All regression tests passed.
+
+---
+
 ## 📂 PARALLEL DEPLOYMENTS (Ancillary Projects)
 
 1. **Smart Cultural Storyteller (Hybrid Failover RAG)** 
