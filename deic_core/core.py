@@ -52,7 +52,8 @@ class DEIC:
             env_spec: dict with keys:
                 'items'             — list of item identifiers
                 'sources'           — list of source/agent identifiers
-                'group_size'        — int, items per latent group
+                'group_size'        — int, items per latent group (single size)
+                'group_sizes'       — list of int (variable sizes, overrides group_size)
                 'valid_multipliers' — list of float shift factors
                 'initial_values'    — dict mapping item -> baseline value
 
@@ -62,24 +63,31 @@ class DEIC:
         """
         self._items = list(env_spec['items'])
         self._sources = list(env_spec['sources'])
-        self._group_size = env_spec.get('group_size', 4)
         self._valid_multipliers = list(env_spec.get('valid_multipliers', [1.2, 1.5, 2.0, 2.5]))
         self._initial_values = dict(env_spec['initial_values'])
+
+        # Support variable group sizes (backward compatible)
+        if 'group_sizes' in env_spec:
+            group_sizes = list(env_spec['group_sizes'])
+        else:
+            group_sizes = [env_spec.get('group_size', 4)]
+        self._group_sizes = group_sizes
 
         self._queried_values = {}
         self._trusted_source = None
         self._source_observations = {s: [] for s in self._sources}
 
-        # Build hypothesis bank: each hypothesis is (shifted_set, multiplier)
-        all_combos = list(itertools.combinations(self._items, self._group_size))
+        # Build hypothesis bank across all specified group sizes
         self._hypotheses = []
-        for S in all_combos:
-            for m in self._valid_multipliers:
-                self._hypotheses.append({
-                    'S': set(S),
-                    'm': m,
-                    'prob': 1.0
-                })
+        for gs in group_sizes:
+            all_combos = list(itertools.combinations(self._items, gs))
+            for S in all_combos:
+                for m in self._valid_multipliers:
+                    self._hypotheses.append({
+                        'S': set(S),
+                        'm': m,
+                        'prob': 1.0
+                    })
         self._normalize()
 
     # ------------------------------------------------------------------

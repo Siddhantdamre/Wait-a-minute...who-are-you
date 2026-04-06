@@ -44,7 +44,7 @@ class ClinicalDEICAdapter:
         engine.initialize_beliefs({
             'items': patients,
             'sources': stations,
-            'group_size': 4,                        # DEIC's assumption
+            'group_sizes': [2, 3, 4, 5, 6],        # Variable group sizes
             'valid_multipliers': [1.3, 1.8, 2.5],
             'initial_values': baseline,
         })

@@ -1,0 +1,46 @@
+﻿=================================================================
+GATE 1: Zero-Modification Clinical Transfer
+DEIC core.py: UNCHANGED (group_size=4 hardcoded)
+Clinical domain: variable group size (2-6)
+=================================================================
+
+## Head-to-Head (Budget=8, N=200, 3 seeds)
+| Solver | Seed 1 | Seed 2 | Seed 3 | Average |
+|---|---|---|---|---|
+| Random Baseline | 0.0% | 0.0% | 0.0% | 0.0% |
+| DEIC (no trust) | 13.0% | 13.0% | 16.5% | 14.2% |
+| DEIC (adaptive trust) | 29.5% | 22.5% | 30.5% | 27.5% |
+
+## Budget Sweep (DEIC Adaptive Trust, averaged across 3 seeds)
+| Solver | Budget=6 | Budget=8 | Budget=10 | Budget=12 |
+|---|---|---|---|---|
+| DEIC (adaptive trust) | 6.0% | 25.3% | 63.5% | 83.2% |
+
+## Accuracy by True Group Size (Budget=8, all seeds pooled)
+| True Group Size | Episodes | DEIC Accuracy | Expectation |
+|---|---|---|---|
+| 2 | 119 | 10.1% | MISMATCHED |
+| 3 | 129 | 17.1% | MISMATCHED |
+| 4 | 113 | 26.5% | matches DEIC assumption |
+| 5 | 113 | 28.3% | MISMATCHED |
+| 6 | 126 | 48.4% | MISMATCHED |
+
+## Accuracy by Severity (Budget=8, all seeds pooled)
+| Severity | Episodes | DEIC Accuracy |
+|---|---|---|
+| 1.3x | 208 | 25.5% |
+| 1.8x | 208 | 26.4% |
+| 2.5x | 184 | 26.6% |
+
+## Verdict
+  Overall accuracy (Budget=8): 26.2%
+  Group-size=4 episodes:       26.5% (113 episodes)
+  Group-size!=4 episodes:      26.1% (487 episodes)
+  DEIC does not generalize to the clinical domain in its current form.
+
+  Does DEIC generalize without modification? NO ΓÇö fundamental failure across all group sizes.
+
+=================================================================
+GATE 1 COMPLETE ΓÇö STOP HERE
+Do not modify deic_core/core.py until results are reviewed.
+=================================================================
