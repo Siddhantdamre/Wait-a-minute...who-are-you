@@ -1,0 +1,44 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Users\siddh\Projects\Emotion_and_AI
+plugins: anyio-4.10.0, dash-4.1.0
+collected 4 items
+
+tests\test_explainer.py .F..                                             [100%]
+
+================================== FAILURES ===================================
+______________ test_explainer_diagnostic_falsifiability_specific ______________
+
+    def test_explainer_diagnostic_falsifiability_specific():
+        # Setup state for specific counterfactual logic
+        ws = CognitiveState(
+            entropy=0.5,
+            confidence_margin=0.8,
+            trusted_source_locked=True,
+            top_hypotheses=[
+                ({"shifted_items": frozenset({"item_1"}), "val": 2}, 0.9),
+                ({"shifted_items": frozenset({"item_1", "item_2"}), "val": 2}, 0.1)
+            ],
+            all_hypotheses=[({}, 0.9), ({}, 0.1)]
+        )
+>       sm = SelfModel.from_workspace(ws)
+
+tests\test_explainer.py:32: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deic_core\self_model.py:75: in from_workspace
+    sm.trust_status = cls._summarize_trust(ws)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+ws = CognitiveState(entropy=0.5, confidence_margin=0.8, top_hypotheses=[({'shifted_items': frozenset({'item_1'}), 'val': 2}...s_queried=0, items_total=0, current_goal='', next_action='', last_action_reason='', episode_count=0, memory_summary={})
+
+    @staticmethod
+    def _summarize_trust(ws: CognitiveState) -> str:
+        if ws.trusted_source_locked:
+            # Find the most trusted source
+>           best_s = max(ws.trust_distribution.items(), key=lambda x: x[1])
+E           ValueError: max() arg is an empty sequence
+
+deic_core\self_model.py:166: ValueError
+=========================== short test summary info ===========================
+FAILED tests/test_explainer.py::test_explainer_diagnostic_falsifiability_specific
+========================= 1 failed, 3 passed in 0.25s =========================

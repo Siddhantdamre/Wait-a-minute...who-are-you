@@ -14,6 +14,7 @@ from .interface import ToolInterface
 from .workspace import CognitiveState
 from .self_model import SelfModel
 from .planner import MinimalPlanner, PlannerMode, PlannerDecision
+from .explainer import StateExplainer
 from .hypothesis import (
     HypothesisGenerator,
     FixedPartitionGenerator,
@@ -34,6 +35,7 @@ __all__ = [
     "MinimalPlanner",
     "PlannerMode",
     "PlannerDecision",
+    "StateExplainer",
     "HypothesisGenerator",
     "FixedPartitionGenerator",
     "VariablePartitionGenerator",
