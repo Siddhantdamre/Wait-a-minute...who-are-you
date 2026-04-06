@@ -1,0 +1,9 @@
+﻿Generating N=100 episodes for C6 Hidden Structure...
+
+# C6 Hidden Structure (Unknown Categories Check)
+| Solver | Cond | Accuracy (95% CI) | Latency | Belief Rev | Avg Budget Used |
+|---|---|---|---|---|---|
+| Ledger (Soft) | C6 | 0.0% [0.0-3.7] | finite | Mean=0.4 Med=0.3 ▒0.0 | 10.0 |
+| Temporal Trust | C6 | 0.0% [0.0-3.7] | finite | Mean=0.6 Med=0.5 ▒0.1 | 48.0 |
+| Category Extrapolator | C6 | 3.0% [1.0-8.5] | finite | Mean=0.0 Med=0.0 ▒0.0 | 7.0 |
+| Flat Structure Learner | C6 | 5.0% [2.2-11.2] | finite | Mean=0.0 Med=0.0 ▒0.0 | 8.0 |

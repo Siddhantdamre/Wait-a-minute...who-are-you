@@ -1,0 +1,8 @@
+﻿Generating N=100 episodes for C6 Discrete Hypothesis Pilot...
+
+# C6 Discrete vs Continuous Pilot Results
+| Solver | Cond | Accuracy (95% CI) | Avg Budget Used |
+|---|---|---|---|
+| Hierarchical Active Inference | C6 | 0.0% [0.0-3.7] | 8.0 |
+| Flat Structure Learner (Best Flat) | C6 | 5.0% [2.2-11.2] | 8.0 |
+| Discrete Hypothesis Solver | C6 | 37.0% [28.2-46.8] | 8.0 |

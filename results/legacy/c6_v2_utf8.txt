@@ -1,0 +1,9 @@
+﻿Generating N=100 episodes for C6 Adaptive Trust v2 Pilot...
+
+# C6 Discrete v2 Adaptive Trust Pilot Results
+| Solver | Cond | Accuracy (95% CI) | Avg Budget Used |
+|---|---|---|---|
+| 1. Discrete Baseline | C6 | 37.0% [28.2-46.8] | 8.0 |
+| 2. Discrete Agent v1 | C6 | 37.0% [28.2-46.8] | 8.0 |
+| 3. Discrete Agent v2 (with Adaptive Trust) | C6 | 65.0% [55.3-73.6] | 7.7 |
+| 4. Ablation: v2 (without Adaptive Trust) | C6 | 47.0% [37.5-56.7] | 8.0 |
