@@ -6,13 +6,24 @@ DEIC maintains a discrete hypothesis bank over hidden combinatorial structure, t
 
 ---
 
+## Key Result
+
+**DEIC's core inference mechanisms transfer across domains. The main adaptation requirement is the hypothesis generator, not the trust, query selection, or posterior update logic.**
+
+This was demonstrated through three domains:
+- **Byzantine Executive Benchmark (C6)** — original development domain
+- **Cyber Incident Diagnosis** — isomorphic transfer, zero code changes
+- **Clinical Deterioration Monitoring** — non-isomorphic transfer, one backward-compatible change (`group_sizes` parameter)
+
+---
+
 ## What DEIC Does
 
 1. **Infers hidden structure** from sparse observations
 2. **Tracks source reliability** — identifies which information sources are trustworthy
 3. **Actively allocates queries** under a fixed budget to maximize information gain
 4. **Revises beliefs safely** when the world changes
-5. **Transfers across domains** — the same `core.py` works on structurally isomorphic problems without modification
+5. **Transfers across domains** — core inference logic is domain-agnostic; only the hypothesis generator needs adaptation
 
 ## What DEIC Is Not
 
@@ -34,15 +45,40 @@ DEIC maintains a discrete hypothesis bank over hidden combinatorial structure, t
 | DEIC (no adaptive trust) | ~37% | ~81% |
 | **DEIC (adaptive trust)** | **~61%** | **~94%** |
 
-### Cross-Domain Transfer: Cyber Incident Diagnosis
-
-Tested on a simulated service mesh with hidden cascading failures — **zero changes to `deic_core/core.py`**:
+### Transfer: Cyber Incident Diagnosis (isomorphic, zero core changes)
 
 | Solver | Budget=8 | Budget=12 |
 |---|---|---|
 | Random Baseline | 0.0% | 0.0% |
-| DEIC (no adaptive trust) | 37.7% | — |
-| **DEIC (adaptive trust)** | **59.7%** | **94.3%** |
+| **DEIC (adaptive trust)** | **57.0%** | **94.0%** |
+
+### Transfer: Clinical Deterioration (non-isomorphic, variable group sizes)
+
+| Solver | Budget=8 | Budget=12 |
+|---|---|---|
+| Random Baseline | 0.0% | 0.0% |
+| DEIC (group_size=4 only, Gate 1) | 10.7% | 18.0% |
+| **DEIC (variable group_sizes, Gate 2)** | **26.2%** | **83.2%** |
+
+Gate 1 showed DEIC scored 56.6% on group-size=4 episodes but 0.0% on all others — proving the bottleneck was hypothesis generation, not inference logic. Gate 2's single backward-compatible change recovered non-4 episodes from 0% to 10–48%.
+
+---
+
+## Architecture
+
+DEIC separates into two cleanly independent concerns:
+
+```
+┌─────────────────────────────────┐
+│     Core Inference Engine       │  ← domain-agnostic, transfers
+│  ├ adaptive trust discovery     │
+│  ├ InfoGain query selection     │
+│  └ posterior elimination        │
+├─────────────────────────────────┤
+│   Hypothesis Generator          │  ← domain-specific, configurable
+│  └ initialize_beliefs(env_spec) │
+└─────────────────────────────────┘
+```
 
 ---
 
@@ -53,11 +89,21 @@ from deic_core import DEIC
 
 engine = DEIC(adaptive_trust=True)
 
+# Fixed group size (benchmark/cyber)
 engine.initialize_beliefs({
     'items': [...],
     'sources': [...],
     'group_size': 4,
     'valid_multipliers': [1.5, 2.0, 3.0, 5.0],
+    'initial_values': {...},
+})
+
+# Variable group sizes (clinical/general)
+engine.initialize_beliefs({
+    'items': [...],
+    'sources': [...],
+    'group_sizes': [2, 3, 4, 5, 6],
+    'valid_multipliers': [1.3, 1.8, 2.5],
     'initial_values': {...},
 })
 
@@ -76,7 +122,7 @@ answer = engine.propose_state()
 
 | Method | Purpose |
 |---|---|
-| `initialize_beliefs(env_spec)` | Set up hypothesis bank for a new episode |
+| `initialize_beliefs(env_spec)` | Set up hypothesis bank (supports `group_size` or `group_sizes`) |
 | `update_observation(source, item, value, t)` | Incorporate one piece of evidence |
 | `update_trust()` | Recompute source reliability scores |
 | `score_hypotheses()` | Inspect current belief state |
@@ -94,50 +140,44 @@ answer = engine.propose_state()
 ├── benchmark/                        # Kaggle Executive Functions benchmark
 │   ├── environment.py                # C3–C6 procedural environment
 │   ├── solvers.py                    # Original solver implementations
-│   ├── deic_adapter.py               # Benchmark ↔ DEIC bridge
+│   ├── deic_adapter.py               # Benchmark <-> DEIC bridge
 │   ├── run_evaluation.py             # Evaluation harness
 │   └── kaggle_submission.ipynb       # Published notebook
 ├── experiments/
-│   └── cyber_transfer/               # Second-domain transfer test
-│       ├── environment.py            # Cyber incident environment
-│       ├── adapter.py                # Cyber ↔ DEIC bridge
-│       └── run_transfer_pilot.py     # Transfer evaluation
+│   ├── cyber_transfer/               # Isomorphic transfer test
+│   │   ├── environment.py
+│   │   ├── adapter.py
+│   │   └── run_transfer_pilot.py
+│   └── clinical_transfer/            # Non-isomorphic transfer test
+│       ├── environment.py
+│       ├── adapter.py
+│       └── run_gate1_pilot.py
 ├── tests/
-│   └── test_golden_c6.py             # Golden regression guard
-└── PROJECT_LOG.md                    # Milestone history
+│   ├── test_golden_c6.py             # C6 golden regression guard
+│   └── test_transfer_regression.py   # Transfer parity guard
+└── PROJECT_LOG.md
 ```
-
----
-
-## Benchmark: C3 → C6 Difficulty Ladder
-
-Each condition removes a solver shortcut:
-
-| Condition | What It Breaks |
-|---|---|
-| **C3** (Stale contradiction) | Simple contradiction detection |
-| **C4** (Active deception) | Naive majority voting |
-| **C5** (Alert boundary corruption) | Deterministic memory replay |
-| **C6** (Hidden drifting structure) | Static factorization and flat heuristics |
 
 ---
 
 ## Running
 
-### Regression test
 ```bash
+# C6 golden regression
 python tests/test_golden_c6.py
-```
 
-### Cyber transfer pilot
-```bash
+# Transfer regression (cyber + clinical)
+python tests/test_transfer_regression.py
+
+# Individual transfer pilots
 python experiments/cyber_transfer/run_transfer_pilot.py
+python experiments/clinical_transfer/run_gate1_pilot.py
 ```
 
 ---
 
 ## Research Context
 
-This project contributes to the **Executive Functions** track of the Kaggle Measuring Progress Toward AGI competition. It provides a benchmark that isolates hidden-structure belief revision as a specific cognitive challenge, and identifies discrete structured inference with adaptive trust as a more productive approach than continuous latent-space methods for this task family.
+This project contributes to the **Executive Functions** track of the Kaggle Measuring Progress Toward AGI competition. DEIC's core inference mechanisms — adaptive trust discovery, information-gain query selection, and posterior elimination — transferred across multiple hidden-state environments. The main adaptation requirement was the hypothesis generator rather than the trust or query logic. This suggests a useful architectural pattern for building reusable cognitive subsystems: separate domain-agnostic inference from domain-specific hypothesis generation.
 
 DEIC is a concrete, testable cognitive module — not a claim of general intelligence.
