@@ -1,0 +1,13 @@
+﻿--- C6 Robustness and Budget Sweep ---
+
+# Averaged Accuracy Across Seeds
+| Solver | Budget=6 | Budget=8 | Budget=10 | Budget=12 |
+|---|---|---|---|---|
+| Discrete Agent v1 | 7.7% | 37.0% | 81.3% | 81.3% |
+| Discrete Agent v2 | 23.0% | 61.3% | 78.0% | 93.0% |
+| Discrete Agent v3 | 14.0% | 52.3% | 97.3% | 100.0% |
+
+# Raw Seed Data (Budget 8)
+Discrete Agent v1: 41.0%, 39.0%, 31.0%
+Discrete Agent v2: 64.0%, 60.0%, 60.0%
+Discrete Agent v3: 51.0%, 54.0%, 52.0%

@@ -1,0 +1,14 @@
+{
+  "Japan": {
+    "values": ["Harmony", "Respect", "Collectivism", "Long-term Orientation"],
+    "norms": ["Bow when greeting", "Avoid loud public talking", "High punctuality"],
+    "risks": ["Misinterpreting silence as agreement", "Inadvertent disrespect to elders"],
+    "dimensions": {"Power Distance": 54, "Individualism": 46}
+  },
+  "Bulgaria": {
+    "values": ["Tradition", "Community"],
+    "norms": ["Nodding means 'No', shaking head means 'Yes'"],
+    "risks": ["Severe confusion with simple gestures"],
+    "dimensions": {"Power Distance": 70, "Individualism": 30}
+  }
+}

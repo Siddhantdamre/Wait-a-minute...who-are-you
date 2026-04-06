@@ -1,0 +1,13 @@
+app/main.py
+   ↓
+core/agent.py
+   ↓
+core/engine.py        ← ONLY reasoning engine
+   ↓
+(spatial + temporal inference)
+   ↓
+core/narrative.py
+   ↓
+core/cultural_intelligence_builder.py
+   ↓
+expression/orchestrator.py

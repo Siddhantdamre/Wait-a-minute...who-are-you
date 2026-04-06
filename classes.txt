@@ -1,0 +1,34 @@
+﻿
+True_AGI_Core\action.py:10:
+class ExpectedFreeEnergyEva
+luator(nn.Module):
+True_AGI_Core\agi_orchestra
+tor.py:5:class 
+VectorSpaceMapper:
+True_AGI_Core\kaggle_benchm
+ark_submission.py:13:    
+class MockKBench:
+True_AGI_Core\kaggle_benchm
+ark_submission.py:19:      
+  class Benchmark:
+True_AGI_Core\perception.py
+:10:class HierarchicalActiv
+eInferenceNetwork(nn.Module
+):
+True_AGI_Core\run_agi.py:23
+:class 
+ByzantineSchismEnvironment:
+True_AGI_Core\structure_lea
+rner.py:10:class DynamicStr
+uctureLearner(nn.Module):
+True_AGI_Core\synchro_chann
+el.py:4:class SemanticBottl
+eneckChannel(nn.Module):
+True_AGI_Core\tom_core.py:1
+3:class 
+AgentMindModel(nn.Module):
+True_AGI_Core\tom_core.py:5
+2:class MetaCognitiveToMCel
+l(nn.Module):
+
+
