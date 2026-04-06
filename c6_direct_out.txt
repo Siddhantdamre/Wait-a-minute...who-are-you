@@ -1,0 +1,25 @@
+============================================================
+GOLDEN REGRESSION TEST: DEIC Extraction Parity
+============================================================
+
+[Test 1] Budget=8 (frozen target: ~61.3%)
+  Budget=8, Seed=700000: 66.0%
+  Budget=8, Seed=800000: 54.0%
+  Budget=8, Seed=900000: 56.0%
+  Budget=8 Average: 58.7%
+  Budget=8: PASS
+
+[Test 2] Budget=12 (frozen target: ~93.0%)
+  Budget=12, Seed=700000: 95.0%
+  Budget=12, Seed=800000: 92.0%
+  Budget=12, Seed=900000: 97.0%
+  Budget=12 Average: 94.7%
+  Budget=12: PASS
+
+============================================================
+ALL GOLDEN REGRESSION TESTS PASSED
+  Budget=8:  58.7%
+  Budget=12: 94.7%
+============================================================
+
+Errors:

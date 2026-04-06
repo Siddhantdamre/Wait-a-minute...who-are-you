@@ -1,8 +1,0 @@
-﻿Generating N=100 episodes for C6 Hybrid Pilot...
-
-# C6 Hybrid Interface Pilot Results
-| Solver | Cond | Accuracy (95% CI) | Avg Budget Used |
-|---|---|---|---|
-| Continuous Core Only | C6 | 0.0% [0.0-3.7] | 8.0 |
-| Discrete Hypothesis Only | C6 | 36.0% [27.3-45.8] | 8.0 |
-| Hybrid Interface (Discrete + Continuous) | C6 | 8.0% [4.1-15.0] | 8.0 |
