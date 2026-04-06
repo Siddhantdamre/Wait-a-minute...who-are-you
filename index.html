@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Cultural Storyteller | Research Dashboard</title>
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { margin: 0; background: #05070a; color: #fff; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        #map { flex: 1; border-right: 1px solid #333; }
+        #sidebar { width: 480px; background: #0b0e14; display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
+        .panel { padding: 25px; overflow-y: auto; flex: 1; scrollbar-width: thin; }
+        
+        #status-bar { background: #111; color: #00ff41; font-family: monospace; padding: 10px 25px; border-bottom: 1px solid #333; font-size: 0.8em; }
+        #console { background: #000; color: #888; font-family: 'Courier New', monospace; padding: 12px; font-size: 0.7em; height: 100px; margin: 15px; border-radius: 5px; border: 1px solid #222; overflow-y: auto; }
+        
+        #history-content { white-space: pre-line; color:#aaa; font-size:0.9em; line-height: 1.6; }
+        
+        #timeline { height: 100px; padding: 20px; background: #080a0f; border-top: 1px solid #222; }
+        input[type=range] { width: 100%; accent-color: #3b82f6; cursor: pointer; }
+        
+        input[type=text] {
+            width: 93%; background: #161b22; border: 1px solid #333; color: white; padding: 10px; margin-bottom: 15px; border-radius: 5px;
+        }
+
+        #media-slot { 
+            width:100%; height:250px; background:#000; border-radius:10px; margin-bottom:20px; 
+            display:flex; align-items:center; justify-content:center; overflow: hidden; border: 1px solid #333; position: relative;
+        }
+        #generated-image { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1s; display:none; }
+        #img-placeholder { position: absolute; color: #555; }
+
+        .glass { background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid #222; margin-top: 15px; }
+        button { background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
+        button:hover { background: #2563eb; }
+        .chart-container { margin: 20px 0; height: 200px; }
+        .loading { color: #3b82f6; font-style: italic; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="sidebar">
+    <div id="status-bar">> Core System: Active | Archive Access: Granted</div>
+
+    <div class="panel">
+        <h1 id="country-label" style="margin:0; color:#3b82f6; font-size: 1.5em;">Cultural Storyteller</h1>
+        
+        <div id="media-slot">
+            <img id="generated-image" src="" alt="Archival Image">
+            <span id="img-placeholder">Multimodal Stream Standby</span>
+        </div>
+
+        <input type="text" id="user-input" placeholder="Enter a theme (e.g., 'Love story', 'War hero')...">
+
+        <div class="glass" id="story-content">Select a coordinate to awaken the agentic loop...</div>
+        
+        <div class="chart-container">
+            <canvas id="dimensionChart"></canvas>
+        </div>
+        
+        <button onclick="speakStory()">🔊 Narrate Case Study</button>
+    </div>
+
+    <div id="console">> Initializing Agent...<br>> Wikipedia Grounding: Ready</div>
+
+    <div class="panel" style="background:#090c11; border-top: 1px solid #222;">
+        <h3 style="margin-top:0; font-size: 0.9em; text-transform: uppercase; color: #555;">Archival Chronicles</h3>
+        <div id="history-content">Awaiting factual retrieval...</div>
+    </div>
+
+    <div id="timeline">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size: 0.8em;">
+            <span>Chronological Era: <b id="era-label">1950</b></span>
+            <span style="color: #444;">1000 - 2026</span>
+        </div>
+        <input type="range" min="1000" max="2026" value="1950" id="era-slider" oninput="document.getElementById('era-label').innerText = this.value">
+    </div>
+</div>
+
+<script>
+    let chart;
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [20, 10], zoom: 2, pitch: 40
+    });
+
+    const ctx = document.getElementById('dimensionChart').getContext('2d');
+    chart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: ['Individualism', 'Power Distance', 'Uncertainty', 'Masculinity', 'Long Term'],
+            datasets: [{ label: 'Cultural Score', data: [50,50,50,50,50], backgroundColor: 'rgba(59, 130, 246, 0.2)', borderColor: '#3b82f6' }]
+        },
+        options: { scales: { r: { beginAtZero: true, max: 100, ticks: { display: false }, grid: { color: '#222' } } }, plugins: { legend: { display: false } } }
+    });
+
+    map.on('click', async (e) => {
+        const era = document.getElementById('era-slider').value;
+        const userText = document.getElementById('user-input').value || "folklore";
+        const status = document.getElementById('status-bar');
+        const log = document.getElementById('console');
+        
+        const img = document.getElementById('generated-image');
+        const placeholder = document.getElementById('img-placeholder');
+        
+        status.innerText = "> Status: Analyzing Coordinates...";
+        document.getElementById('story-content').innerHTML = "<span class='loading'>Agent researching & synthesizing...</span>";
+        
+        // Reset Media Display
+        img.style.display = 'none';
+        placeholder.style.display = 'block';
+        placeholder.innerText = "Retrieving Archival Imagery...";
+        
+        try {
+            const res = await fetch("/cultural-intelligence", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ lat: e.lngLat.lat, lon: e.lngLat.lng, era, text: userText })
+            });
+
+            const data = await res.json();
+            
+            if (data && data.intel) {
+                status.innerText = "> Status: Synthesis Complete (200 OK)";
+                document.getElementById('country-label').innerText = data.intel.country || "Unknown";
+                document.getElementById('story-content').innerText = data.narrative || "No narrative.";
+                document.getElementById('history-content').innerText = data.intel.cultural_history || "No records.";
+                
+                // --- 1. ARCHIVAL IMAGE DISPLAY ---
+                if (data.intel.image_url) {
+                    img.src = data.intel.image_url;
+                    
+                    img.onload = () => {
+                        placeholder.style.display = 'none';
+                        img.style.display = 'block';
+                        img.style.opacity = 1;
+                    };
+                    img.onerror = () => {
+                        placeholder.innerText = "Archive Image Unavailable";
+                    };
+                } else {
+                    placeholder.innerText = "No image available.";
+                }
+
+                // LOGS
+                const thought = data.intel.thought_signature ? data.intel.thought_signature.substring(0,40) : "No thoughts";
+                log.innerHTML += `<br>> Analysis: ${thought}...`;
+                log.scrollTop = log.scrollHeight;
+
+                // CHART
+                const scores = data.intel.behavior_scores || {};
+                chart.data.datasets[0].data = [scores.idv||50, scores.pdi||50, scores.uai||50, scores.mas||50, scores.lto||50];
+                chart.update();
+            }
+
+        } catch (err) {
+            status.innerText = "> Status: Connection Error";
+            log.innerHTML += `<br>> Error: ${err.message}`;
+            document.getElementById('story-content').innerText = "System Error. Please try again.";
+        }
+    });
+
+    async function speakStory() {
+        const text = document.getElementById('story-content').innerText;
+        if(!text || text.length < 10) { alert("No story to read!"); return; }
+
+        try {
+            const res = await fetch("/speak", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: text })
+            });
+            const data = await res.json();
+            new Audio(data.url).play();
+            
+        } catch (err) {
+            alert("TTS Error: " + err.message);
+        }
+    }
+</script>
+</body>
+</html>

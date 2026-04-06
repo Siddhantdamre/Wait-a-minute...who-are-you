@@ -1,0 +1,76 @@
+# Central Project Log & Cognitive Milestone Tracker
+*(Last Updated: Current Episode)*
+
+This document serves as the official historical ledger tracking the structural evolution of the `Emotion_and_AI` repository, focusing specifically on our ascent through Level 4 AGI Cognitive Benchmarks.
+
+---
+
+## 🏆 MILESTONE 1: Hierarchical Active Inference & The Byzantine Schism
+**Status**: `COMPLETED` | **Code**: `True_AGI_Core/perception.py`, `tom_core.py`
+
+*   **Architecture Established:** Transitioned from flat LLM autocomplete predictions to a multi-tiered **Expected Free Energy** minimization engine. Separated syntactic tracking (Level 1) from semantic meaning (Level 2).
+*   **Theory of Mind (`tom_core.py`):** Developed `MetaCognitiveToMCell` to maintain nested generative models (beliefs about other agents' beliefs).
+*   **Benchmark Passed:** The core successfully detected multi-agent deception loops (The Byzantine Schism test) by isolating diverging belief vectors within one interaction cycle.
+
+---
+
+## 🏆 MILESTONE 2: The Cultural Manifold & Structural Plasticity
+**Status**: `COMPLETED` | **Code**: `True_AGI_Core/cultural_translation_matrix.py`, `run_oasis_allocation.py`
+
+*   **Sociological Grounding:** Translated raw human sociological data (Hofstede Dimensions: PDI, IDV, MAS, UAI) directly into the empirical weight priors ($\theta^{(2)}$) of the AGI engine.
+*   **The Oasis Conflict:** Initialized Node A (Individualistic/USA) and Node B (Collectivistic/Japan) in a strict cognitive deadlock over resource allocation. 
+*   **The "Aha!" Moment (BMR):** When Variational Free Energy hit a critical, unresolvable wall ($\approx 300,000$), Node A dynamically invoked **Bayesian Model Reduction**, physically growing its neural dimensions ($4 \rightarrow 5$). Following structural expansion, uncertainty collapsed to $< 1.25$. 
+*   **Result:** Solved a localized version of the **Symbol Grounding Problem**, proving a model can mathematically "invent" an axis of relativism to comprehend an opposing intelligence.
+
+---
+
+## 🏆 MILESTONE 3: The Triple Epistemic Clash
+**Status**: `COMPLETED` | **Code**: `True_AGI_Core/triple_epistemic_clash.py`
+
+*   **The Dogmatiic Agent:** Introduced Node C, a heavily synthesized agent with a hyper-rigid Precision Matrix ($\Pi = 15.0$) and extreme Uncertainty Avoidance ($UAI \approx 0.98$).
+*   **Belief Velocity Diagnostics:** By monitoring ToM velocity ($v \approx 0.098$), Node A actively diagnosed that Node C's failures were caused by dogmatism rather than environmental noise. 
+*   **Avoiding Catastrophic Forgetting:** Node A triggered a secondary structural expansion ($5 \rightarrow 6$) to isolate Node C's inflexible worldview on an orthogonal sub-manifold. Node A successfully absorbed the Dogmatism without erasing its previously established $5D$ consensus with Node B.
+
+---
+
+## 🏆 MILESTONE 4: Semantic Synchronization (Protocol Emergence)
+**Status**: `COMPLETED` | **Code**: `True_AGI_Core/synchro_channel.py`, `semantic_sync_test.py`
+
+*   **The Communication Bottleneck:** Built an active `MessageEncoder` to distill Node A's $6D$ abstract realization down to a $1D$ scalar signal ($m_t$). 
+*   **Sensory Language:** Embedded Node A's protocol into Node B's sensory observation vector. 
+*   **Cultural Transmission:** Node B (having never met Node C) experienced a massive Epistemic Error cascade ($\approx 160,000$) simply attempting to interpret Node A's foreign syntax.
+*   **Result (Networked Intelligence):** Node B's internal engine triggered `grow_l2()` ($5 \rightarrow 6$) purely based on Node A's transmitted testimony. The architecture demonstrated that complex intelligence can be scaled across isolated networks by using generative models to induce structural realization through language.
+
+---
+
+## 🏆 MILESTONE 5: The Byzantine Executive Belief Benchmark & Discrete Executive Inference Core (DEIC)
+**Status**: `COMPLETED` | **Code**: `benchmark/solvers.py`, `benchmark/environment.py`
+
+*   **What this work contributes toward AGI:** This stage does not claim to build AGI as a whole. Instead, it contributes a narrower but critical cognitive subsystem: **hidden-state belief revision under partial observability**.
+*   **The Difficulty Ladder (C3$\rightarrow$C6):** We progressively removed shortcut strategies such as majority aggregation, deterministic memory, and fixed latent factorization. The hardest condition, C6, required the agent to infer drifting hidden structure, manage source reliability, and choose active queries under a strict observation budget (8 turns).
+*   **Representation Mismatch:** The continuous hierarchical active inference core (Milestones 1-4) failed under the C6 condition, exposing a severe architectural mismatch for discrete, combinatorial partially-observable tasks.
+*   **The Discrete Executive Inference Core (DEIC):** We discovered that cheap memory and static factorization were insufficient, but a trust-aware discrete solver (Agent v2) successfully recovered meaningful performance (~61%). 
+*   **Conclusion:** This establishes that the most promising building block for these environments is a **discrete executive inference module** that infers hidden structure, tracks trust safely (Adaptive Trust), and actively allocates attention under starvation budgets. This is a real cognitive component that broader intelligent systems will need for executive functioning.
+
+---
+
+## 🏆 MILESTONE 6: DEIC Extraction & Cross-Domain Transfer
+**Status**: `COMPLETED` | **Code**: `deic_core/core.py`, `experiments/cyber_transfer/`
+
+*   **Module Extraction:** Extracted the Discrete Executive Inference Core (DEIC) from the benchmark solver loop into a standalone, domain-agnostic Python module with a clean 6-method API (`initialize_beliefs`, `update_observation`, `update_trust`, `score_hypotheses`, `select_query`, `propose_state`).
+*   **Golden Regression:** Validated extraction parity against frozen C6 results (Budget=8: 56.7%, Budget=12: 91.7%) — both within tolerance bands.
+*   **Cross-Domain Transfer:** Built a simulated cyber incident diagnosis environment (hidden service failures, stale-cache monitors, 8-query budget). DEIC achieved **59.7% accuracy** on the cyber domain at Budget=8 with **zero changes to `deic_core/core.py`**, confirming the inference mechanism is domain-agnostic.
+*   **Conclusion:** DEIC is a reusable cognitive subsystem for hidden-state belief revision. It is not general intelligence, but it is a concrete, testable module targeting one specific capability that broader intelligent systems need.
+
+---
+
+## 📂 PARALLEL DEPLOYMENTS (Ancillary Projects)
+
+1. **Smart Cultural Storyteller (Hybrid Failover RAG)** 
+   - A multimodal educational app utilizing a dual-brain failover: **Gemini 2.0 Flash Lite** (Primary Cloud) -> **Local Meta Llama 3** (Edge Failover). Integrates explicit Wikipedia API grounding with AI Video Synthesis.
+2. **Mayan Artifact Pipeline (GSoC)** 
+   - Implemented geometric alignment (RANSAC/ICP) for repairing massive 3D scans of fractured Healing Stones.
+3. **CognitiveShield v3.0**
+   - Intrusion prevention honeypot bridging an OVS Phantom Fabric with an asynchronous SLM Decoy environment to trap hostile network probes in endless hallucinations.
+4. **UMA Voice AI**
+   - Provisioned automated AWS EC2 CI/CD architectures for edge conversational engines.

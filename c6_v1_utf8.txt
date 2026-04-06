@@ -1,0 +1,7 @@
+﻿Generating N=100 episodes for C6 Discrete Structure Agent v1 Pilot...
+
+# C6 Discrete vs Discrete v1 Results
+| Solver | Cond | Accuracy (95% CI) | Avg Budget Used |
+|---|---|---|---|
+| Discrete Baseline (Sequential Query) | C6 | 28.0% [20.1-37.5] | 8.0 |
+| Discrete Structure Agent v1 (Active IG) | C6 | 31.0% [22.8-40.6] | 8.0 |

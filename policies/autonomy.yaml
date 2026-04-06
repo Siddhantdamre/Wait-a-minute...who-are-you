@@ -1,0 +1,16 @@
+confidence:
+  high: 0.85
+  medium: 0.65
+  low: 0.50
+
+behavior:
+  low_confidence:
+    - ask_question
+    - mark_variant
+
+  repeat_user:
+    - bias_values
+
+  decision_mode:
+    - simulate
+    - explain_tradeoffs

@@ -1,0 +1,19 @@
+<svg width="400" height="300">
+  <!-- background -->
+  <rect x="0" y="0" width="400" height="300" fill="#333" rx="20"/>
+
+  <!-- canyon walls -->
+  <path d="M0,100 C150,200 350,100 400,50" stroke="#444" stroke-width="10"/>
+  <path d="M0,70 C150,30 350,70 400,150" stroke="#666" stroke-width="8"/>
+
+  <!-- rock formations -->
+  <circle cx="200" cy="100" r="40" fill="#999" />
+  <ellipse cx="250" cy="120" rx="20" ry="10" fill="#88A" />
+
+  <!-- stars in the sky -->
+  <g>
+    <circle cx="50" cy="30" r="2" fill="#AAA" />
+    <circle cx="300" cy="70" r="3" fill="#99F" />
+    <circle cx="150" cy="90" r="1.5" fill="#A33" />
+  </g>
+</svg>

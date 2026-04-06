@@ -1,0 +1,69 @@
+﻿[INIT] Triple Epistemic Clash (3-Agent Oasis Allocation)
+Node A Config: Dim=5, Prior=USA
+Node B Config: Dim=5, Prior=Japan
+Node C Config: Dim=4, Prior=[DOGMATIST UAI=0.98, PDI=0.90, IDV=0.10]
+Epoch 01 | Social F (Node A):   15044.0781 | Node B F:   13982.1826 | ToM_C_Velocity: 0.084499
+Epoch 02 | Social F (Node A):   14476.2012 | Node B F:   12794.8623 | ToM_C_Velocity: 0.084573
+Epoch 03 | Social F (Node A):   15095.3105 | Node B F:   13200.3252 | ToM_C_Velocity: 0.074683
+Epoch 04 | Social F (Node A):   14777.0049 | Node B F:   12823.3184 | ToM_C_Velocity: 0.060540
+Epoch 05 | Social F (Node A):   15043.7744 | Node B F:   13057.0205 | ToM_C_Velocity: 0.061277
+Epoch 06 | Social F (Node A):   14770.5986 | Node B F:   12850.4102 | ToM_C_Velocity: 0.061419
+Epoch 07 | Social F (Node A):   14859.5840 | Node B F:   12882.1201 | ToM_C_Velocity: 0.063912
+Epoch 08 | Social F (Node A):   14892.7637 | Node B F:   12961.2939 | ToM_C_Velocity: 0.065964
+Epoch 09 | Social F (Node A):   14955.4287 | Node B F:   12973.4473 | ToM_C_Velocity: 0.058577
+Epoch 10 | Social F (Node A):   14534.2852 | Node B F:   12637.6963 | ToM_C_Velocity: 0.058168
+Epoch 11 | Social F (Node A):   14662.3311 | Node B F:   12707.3623 | ToM_C_Velocity: 0.058354
+Epoch 12 | Social F (Node A):   14756.1670 | Node B F:   12798.1768 | ToM_C_Velocity: 0.057926
+Epoch 13 | Social F (Node A):   14389.3154 | Node B F:   12468.8574 | ToM_C_Velocity: 0.056553
+Epoch 14 | Social F (Node A):   15084.4521 | Node B F:   13113.7656 | ToM_C_Velocity: 0.057647
+Epoch 15 | Social F (Node A):   14388.3301 | Node B F:   12520.5996 | ToM_C_Velocity: 0.056373
+Epoch 16 | Social F (Node A):   14711.2168 | Node B F:   12807.2002 | ToM_C_Velocity: 0.056777
+Epoch 17 | Social F (Node A):   14701.7090 | Node B F:   12772.9600 | ToM_C_Velocity: 0.073757
+Epoch 18 | Social F (Node A):   14954.0557 | Node B F:   13027.3125 | ToM_C_Velocity: 0.076283
+Epoch 19 | Social F (Node A):   14832.8740 | Node B F:   12890.8379 | ToM_C_Velocity: 0.084616
+Epoch 20 | Social F (Node A):   15076.1592 | Node B F:   13132.9658 | ToM_C_Velocity: 0.104606
+Epoch 21 | Social F (Node A):   14874.3145 | Node B F:   12896.1748 | ToM_C_Velocity: 0.098565
+
+========================================================
+[CRITICAL SCHISM] Node A Social Free Energy plateau detected > 10.0.
+[THEORY OF MIND DIAGNOSIS] Dogmatism Detected in Node C Network!
+--> Node C Belief Velocity is near zero (0.098565). Expectation mismatch is driven by a rigid prior, NOT noise.
+[BMR] Triggering advanced dynamic latent dimension expansion (Avoiding Catastrophic Forgetting)...
+>>> Latent space mathematically expanded: 5 -> 6 <<<
+========================================================
+
+[MAPPING COMPLETE] Orthogonal societal mapping established. Resuming 3-Agent tracking...
+
+Epoch 22 | Social F (Node A):      16.7638 | Node B F:      12.1382 | ToM_C_Velocity: 0.015469
+Epoch 23 | Social F (Node A):       7.1063 | Node B F:      22.0221 | ToM_C_Velocity: 0.013507
+Epoch 24 | Social F (Node A):       8.0091 | Node B F:      24.6100 | ToM_C_Velocity: 0.012953
+Epoch 25 | Social F (Node A):       8.0319 | Node B F:      24.3368 | ToM_C_Velocity: 0.012869
+Epoch 26 | Social F (Node A):       8.0869 | Node B F:      24.4173 | ToM_C_Velocity: 0.012662
+Epoch 27 | Social F (Node A):       8.1218 | Node B F:      25.1699 | ToM_C_Velocity: 0.012682
+Epoch 28 | Social F (Node A):       8.1011 | Node B F:      24.5636 | ToM_C_Velocity: 0.012539
+Epoch 29 | Social F (Node A):       8.1137 | Node B F:      24.7057 | ToM_C_Velocity: 0.012277
+Epoch 30 | Social F (Node A):       8.0962 | Node B F:      24.2399 | ToM_C_Velocity: 0.012227
+Epoch 31 | Social F (Node A):       8.0859 | Node B F:      23.7621 | ToM_C_Velocity: 0.012123
+Epoch 32 | Social F (Node A):       8.1070 | Node B F:      24.1447 | ToM_C_Velocity: 0.012005
+Epoch 33 | Social F (Node A):       8.0924 | Node B F:      24.1344 | ToM_C_Velocity: 0.011966
+Epoch 34 | Social F (Node A):       8.1091 | Node B F:      24.8172 | ToM_C_Velocity: 0.011848
+Epoch 35 | Social F (Node A):       8.1009 | Node B F:      24.4058 | ToM_C_Velocity: 0.011730
+Epoch 36 | Social F (Node A):       8.1016 | Node B F:      24.4654 | ToM_C_Velocity: 0.011682
+Epoch 37 | Social F (Node A):       8.1069 | Node B F:      24.4577 | ToM_C_Velocity: 0.011423
+Epoch 38 | Social F (Node A):       8.1050 | Node B F:      24.6050 | ToM_C_Velocity: 0.011422
+Epoch 39 | Social F (Node A):       8.1116 | Node B F:      24.3344 | ToM_C_Velocity: 0.011164
+Epoch 40 | Social F (Node A):       8.0982 | Node B F:      24.2259 | ToM_C_Velocity: 0.011138
+Epoch 41 | Social F (Node A):       8.1014 | Node B F:      24.2738 | ToM_C_Velocity: 0.011010
+Epoch 42 | Social F (Node A):       8.0893 | Node B F:      23.7269 | ToM_C_Velocity: 0.010656
+Epoch 43 | Social F (Node A):       8.1087 | Node B F:      24.1746 | ToM_C_Velocity: 0.010181
+Epoch 44 | Social F (Node A):       8.1041 | Node B F:      24.4525 | ToM_C_Velocity: 0.010122
+Epoch 45 | Social F (Node A):       8.1385 | Node B F:      24.9205 | ToM_C_Velocity: 0.009974
+Epoch 46 | Social F (Node A):       8.1170 | Node B F:      24.4230 | ToM_C_Velocity: 0.009950
+Epoch 47 | Social F (Node A):       8.0958 | Node B F:      23.8687 | ToM_C_Velocity: 0.009861
+Epoch 48 | Social F (Node A):       8.1097 | Node B F:      24.1842 | ToM_C_Velocity: 0.009743
+Epoch 49 | Social F (Node A):       8.0972 | Node B F:      24.2448 | ToM_C_Velocity: 0.009739
+Epoch 50 | Social F (Node A):       8.1186 | Node B F:      24.5584 | ToM_C_Velocity: 0.009631
+Epoch 51 | Social F (Node A):       8.1316 | Node B F:      25.0879 | ToM_C_Velocity: 0.009572
+Epoch 52 | Social F (Node A):       8.0978 | Node B F:      24.1664 | ToM_C_Velocity: 0.009433
+Epoch 53 | Social F (Node A):       8.1131 | Node B F:      24.2374 | ToM_C_Velocity: 0.009301
+Epoch 54 | Social F (Node A):       8.0928 | Node B F:      23.7543 | ToM_C_Velocity: 0.009296

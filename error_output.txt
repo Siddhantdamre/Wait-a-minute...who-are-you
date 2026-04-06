@@ -1,0 +1,46 @@
+﻿[INIT] Loading Hofstede Sociological Manifold...
+Node A Prior (USA): [-0.20000000298023224, 0.20000000298023224, 0.23999999463558197, -0.07999999821186066]
+Node B Prior (JPN): [0.07999999821186066, 0.23999999463558197, 0.8999999761581421, 0.8399999737739563]
+
+[START] Oasis Allocation Simulation (Epistemic Clash)
+venv\Scripts\python.exe : 
+Traceback (most recent 
+call last):
+At line:1 char:1
++ venv\Scripts\python.exe T
+rue_AGI_Core/run_oasis_allo
+cation.py 2>&1 |  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (Tra  
+  ceback (most recent ca   
+ ll last)::String) [],     
+RemoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+  File "C:\Users\siddh\Proj
+ects\Emotion_and_AI\True_AG
+I_Core\run_oasis_allocation
+.py", line 93, in <module>
+    run_simulation()
+  File "C:\Users\siddh\Proj
+ects\Emotion_and_AI\True_AG
+I_Core\run_oasis_allocation
+.py", line 56, in 
+run_simulation
+    mu1_a, mu2_a, F_a, _ = 
+node_a.variational_update(
+  File "C:\Users\siddh\Proj
+ects\Emotion_and_AI\True_AG
+I_Core\perception.py", 
+line 133, in 
+variational_update
+    F_sensory = 0.5 * torch
+.matmul(torch.matmul(err_ob
+s, Pi_1), err_obs)
+RuntimeError: mat1 and 
+mat2 shapes cannot be 
+multiplied (1x10 and 3x3)

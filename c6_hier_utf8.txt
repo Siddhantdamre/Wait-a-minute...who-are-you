@@ -1,0 +1,7 @@
+﻿Generating N=100 episodes for C6 Hierarchical Pilot...
+
+# C6 Hierarchical Pilot Results
+| Solver | Cond | Accuracy (95% CI) | Avg Budget Used |
+|---|---|---|---|
+| Flat Structure Learner | C6 | 14.0% [8.5-22.1] | 8.0 |
+| Hierarchical Active Inference | C6 | 0.0% [0.0-3.7] | 8.0 |
