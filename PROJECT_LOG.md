@@ -64,6 +64,16 @@ This document serves as the official historical ledger tracking the structural e
 
 ---
 
+## 🏆 MILESTONE 7: Transfer Validation & DEIC v1.1
+**Status**: `COMPLETED` | **Code**: `deic_core/core.py`, `experiments/clinical_transfer/`
+
+*   **Gate 1 (Zero-Change Clinical Transfer):** Ran DEIC completely unmodified against a clinical deterioration environment where 2–6 patients deteriorate (breaking the `group_size=4` assumption). Result: 56.6% accuracy when group size happened to be 4, exactly 0.0% when it wasn't. This isolated the bottleneck to hypothesis generation — trust discovery, InfoGain query selection, and posterior elimination all transferred cleanly.
+*   **Gate 2 (Variable Group Sizes):** Extended `initialize_beliefs()` with a backward-compatible `group_sizes` parameter. Non-4 episodes recovered from 0.0% to 10–48% at Budget=8 and 83.2% at Budget=12. C6 golden regression passed. Cyber parity intact.
+*   **Key Finding:** DEIC's core inference mechanisms are domain-agnostic. The main adaptation requirement is the hypothesis generator, not the reasoning engine.
+*   **Architecture Pattern:** Separate domain-agnostic inference (trust, query policy, posterior) from domain-specific hypothesis generation (`initialize_beliefs`). This pattern transfers.
+
+---
+
 ## 📂 PARALLEL DEPLOYMENTS (Ancillary Projects)
 
 1. **Smart Cultural Storyteller (Hybrid Failover RAG)** 

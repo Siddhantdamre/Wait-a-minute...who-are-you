@@ -1,0 +1,31 @@
+﻿============================================================
+TRANSFER REGRESSION SUITE
+============================================================
+
+[Test] Cyber Transfer Parity (Budget=8)
+  Seed=100000: 54.0%
+  Seed=200000: 63.0%
+  Seed=300000: 57.0%
+  Average: 58.0%
+  PASS
+
+[Test] Clinical Transfer (Budget=8, variable group_sizes)
+  Seed=500000: 23.0%
+  Seed=600000: 27.5%
+  Seed=700000: 29.5%
+  Average: 26.7%
+  PASS
+
+[Test] Clinical Transfer (Budget=12, variable group_sizes)
+  Seed=500000: 83.0%
+  Seed=600000: 81.0%
+  Seed=700000: 82.5%
+  Average: 82.2%
+  PASS
+
+============================================================
+ALL TRANSFER TESTS PASSED
+  Cyber Budget=8:    58.0%
+  Clinical Budget=8: 26.7%
+  Clinical Budget=12:82.2%
+============================================================
