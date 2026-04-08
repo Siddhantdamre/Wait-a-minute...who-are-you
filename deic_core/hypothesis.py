@@ -11,6 +11,25 @@ remains domain-agnostic.
 """
 
 import itertools
+from dataclasses import dataclass, field
+from typing import List, Optional
+
+
+# ── Structure Family Specification ──────────────────────────────────
+@dataclass(frozen=True)
+class StructureFamilySpec:
+    """
+    Bounded representation of a structural assumption.
+
+    This is the unit of adaptation: when the current spec fails,
+    the system generates adjacent specs and tests them.
+    """
+    group_size: int
+    multipliers: tuple  # frozen tuple for hashability
+    label: str = ""     # human-readable tag for telemetry
+
+    def __str__(self):
+        return self.label or f"gs={self.group_size},m={list(self.multipliers)}"
 
 
 class HypothesisGenerator:
@@ -41,6 +60,22 @@ class HypothesisGenerator:
         """Return the list of valid multiplier values."""
         raise NotImplementedError
 
+    def family_spec(self) -> Optional[StructureFamilySpec]:
+        """Return the StructureFamilySpec for this generator, or None."""
+        return None
+
+    def adjacent_families(self) -> List[StructureFamilySpec]:
+        """Return bounded adjacent structure family specs for adaptation."""
+        return []
+
+    @classmethod
+    def from_spec(cls, spec: StructureFamilySpec) -> 'HypothesisGenerator':
+        """Construct a generator from a StructureFamilySpec."""
+        return FixedPartitionGenerator(
+            group_size=spec.group_size,
+            multipliers=list(spec.multipliers),
+        )
+
 
 class FixedPartitionGenerator(HypothesisGenerator):
     """
@@ -63,6 +98,30 @@ class FixedPartitionGenerator(HypothesisGenerator):
 
     def valid_multipliers(self):
         return list(self._multipliers)
+
+    def family_spec(self) -> StructureFamilySpec:
+        return StructureFamilySpec(
+            group_size=self._group_size,
+            multipliers=tuple(self._multipliers),
+            label=f"Fixed(gs={self._group_size})",
+        )
+
+    def adjacent_families(self) -> List[StructureFamilySpec]:
+        """Return group_size ± 1 variants, bounded to [1, ∞)."""
+        mults = tuple(self._multipliers)
+        candidates = []
+        if self._group_size > 1:
+            candidates.append(StructureFamilySpec(
+                group_size=self._group_size - 1,
+                multipliers=mults,
+                label=f"Fixed(gs={self._group_size - 1})",
+            ))
+        candidates.append(StructureFamilySpec(
+            group_size=self._group_size + 1,
+            multipliers=mults,
+            label=f"Fixed(gs={self._group_size + 1})",
+        ))
+        return candidates
 
 
 class VariablePartitionGenerator(HypothesisGenerator):

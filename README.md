@@ -60,7 +60,22 @@ This was demonstrated through three domains:
 | DEIC (group_size=4 only, Gate 1) | 10.7% | 18.0% |
 | **DEIC (variable group_sizes, Gate 2)** | **26.2%** | **83.2%** |
 
-Gate 1 showed DEIC scored 56.6% on group-size=4 episodes but 0.0% on all others — proving the bottleneck was hypothesis generation, not inference logic. Gate 2's single backward-compatible change recovered non-4 episodes from 0% to 10–48%.
+Gate 1 showed DEIC scored 56.6% on group-size=4 episodes but 0.0% on all others - proving the bottleneck was hypothesis generation, not inference logic. Gate 2's single backward-compatible change recovered non-4 episodes from 0% to 10-48%.
+
+### Bounded Adaptive Recovery (Phase 15d)
+
+ADAPT_REFINE is now the default adaptive execution policy for generator-backed fixed-family planner paths. It preserves the frozen baseline paths while making bounded family repair operationally useful after adoption.
+
+| Case | Budget=12 | Budget=16 |
+|---|---|---|
+| Cyber anomaly `gs=3` | 0.00 -> 0.46 | 0.37 -> 0.91 |
+| Cyber anomaly `gs=5` | 0.00 -> 0.69 | 0.58 -> 0.99 |
+| Clinical fixed-family mismatch `gs=3` | 0.00 -> 0.44 | 0.35 -> 0.90 |
+| Clinical fixed-family mismatch `gs=5` | 0.00 -> 0.68 | 0.60 -> 0.96 |
+| Cyber `gs=4` baseline | 0.90 -> 0.90 | 1.00 -> 1.00 |
+| C6 planner baseline | 0.91 -> 0.91 | 1.00 -> 1.00 |
+
+This is a bounded adaptive-cognition result, not a claim of AGI. The system can now detect fixed-family failure, adopt a better adjacent family, and complete recovery under realistic budgets without harming the validated baseline paths.
 
 ---
 
@@ -172,6 +187,10 @@ python tests/test_transfer_regression.py
 # Individual transfer pilots
 python experiments/cyber_transfer/run_transfer_pilot.py
 python experiments/clinical_transfer/run_gate1_pilot.py
+
+# Adaptive recovery validation
+python experiments/structure_anomaly.py
+python experiments/cross_domain_adaptive_validation.py
 ```
 
 ---

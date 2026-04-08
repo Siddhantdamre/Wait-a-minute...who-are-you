@@ -22,11 +22,34 @@ class CyberDEICAdapter:
       baseline -> initial_values
     """
 
-    def __init__(self, adaptive_trust=True, use_controller=False, use_planner=False, memory=None):
+    def __init__(
+        self,
+        adaptive_trust=True,
+        use_controller=False,
+        use_planner=False,
+        memory=None,
+        confidence_threshold=0.95,
+        entropy_floor=0.10,
+        coverage_threshold=0.85,
+        enable_adapt_refine=True,
+    ):
         self.adaptive_trust = adaptive_trust
         self.use_controller = use_controller
         self.use_planner = use_planner
         self.memory = memory
+        self.confidence_threshold = confidence_threshold
+        self.entropy_floor = entropy_floor
+        self.coverage_threshold = coverage_threshold
+        self.enable_adapt_refine = enable_adapt_refine
+
+    @staticmethod
+    def _is_better_fit(candidate, current_best):
+        """Rank candidate replay results. Better = more active hyps, then higher margin."""
+        if candidate['active_hypotheses'] > current_best['active_hypotheses']:
+            return True
+        if candidate['active_hypotheses'] == current_best['active_hypotheses']:
+            return candidate['confidence_margin'] > current_best['confidence_margin']
+        return False
 
     def diagnose(self, env):
         baseline = env.get_baseline_latency()
@@ -99,7 +122,10 @@ class CyberDEICAdapter:
     def _diagnose_with_controller(self, env, engine, budget):
         queried_pairs = set()
         inspector = BeliefInspector(engine)
-        controller = CommitController()
+        controller = CommitController(
+            confidence_threshold=self.confidence_threshold,
+            entropy_floor=self.entropy_floor
+        )
 
         while True:
             remaining = budget - 1 - env.turn
@@ -110,9 +136,15 @@ class CyberDEICAdapter:
 
             decision = controller.decide(inspector_state, max(0, remaining), has_valid_queries=has_valid_queries)
 
-            if decision in (CommitController.ACTION_COMMIT, CommitController.ACTION_STOP, CommitController.ACTION_ESCALATE):
+            if decision in (CommitController.ACTION_COMMIT, CommitController.ACTION_STOP):
                 proposed = engine.propose_state()
-                return env.submit_diagnosis(proposed)
+                res = env.submit_diagnosis(proposed)
+                res["final_workspace"] = inspector_state
+                return res
+            elif decision == CommitController.ACTION_ESCALATE:
+                res = env.escalate_ambiguity()
+                res["final_workspace"] = inspector_state
+                return res
             
             elif decision == CommitController.ACTION_QUERY:
                 monitor, service = engine.select_query({
@@ -134,58 +166,196 @@ class CyberDEICAdapter:
     def _diagnose_with_planner(self, env, engine, budget):
         queried_pairs = set()
         inspector = BeliefInspector(engine)
-        planner = MinimalPlanner()
+        planner = MinimalPlanner(
+            confidence_threshold=self.confidence_threshold,
+            entropy_floor=self.entropy_floor,
+            coverage_threshold=self.coverage_threshold,
+            enable_adapt_refine=self.enable_adapt_refine,
+        )
         item_queries = {it: set() for it in engine._items}
         monitors = env.get_monitors()
+
+        # Telemetry for structure adaptation
+        family_search_trigger = ""
+        family_search_outcome = ""
+        candidate_specs_tested = []
+        adaptation_turn = -1
+        remaining_budget_at_adaptation = -1
+        adaptation_before_full_coverage = False
+        post_adaptation_queries = 0
+        post_adaptation_commit_turn = -1
+        post_adaptation_escalation_turn = -1
+        post_adaptation_wrong_commit = False
+        post_adaptation_query_value_total = 0.0
 
         while True:
             remaining = budget - 1 - env.turn
             ws = inspector.workspace()
+            # Inject adaptation telemetry into workspace
+            ws.adaptation_count = engine.adaptation_count
+            ws.current_family_spec = str(engine._current_generator.family_spec()) if engine._current_generator and hasattr(engine._current_generator, 'family_spec') else ""
+            ws.candidate_specs_tested = candidate_specs_tested
+            ws.family_search_trigger = family_search_trigger
+            ws.family_search_outcome = family_search_outcome
+            ws.adaptation_turn = adaptation_turn
+            ws.remaining_budget_at_adaptation = remaining_budget_at_adaptation
+            ws.adaptation_before_full_coverage = adaptation_before_full_coverage
+            ws.post_adaptation_queries = post_adaptation_queries
+            ws.post_adaptation_commit_turn = post_adaptation_commit_turn
+            ws.post_adaptation_escalation_turn = post_adaptation_escalation_turn
+            ws.post_adaptation_wrong_commit = post_adaptation_wrong_commit
+            ws.post_adaptation_query_value = (
+                post_adaptation_query_value_total / post_adaptation_queries
+                if post_adaptation_queries > 0 else 0.0
+            )
+
             sm = SelfModel.from_workspace(ws)
             decision = planner.decide(ws, sm, max(0, remaining))
             mode = decision.mode.value
 
-            if mode in ("EARLY_COMMIT", "ESCALATE"):
+            if mode == "EARLY_COMMIT":
                 proposed = engine.propose_state()
-                return env.submit_diagnosis(proposed)
-            
-            elif mode in ("EXPLORE", "REFINE"):
-                monitor, service = None, None
-                
-                if mode == "EXPLORE":
-                    target_item = None
-                    for it, ags in item_queries.items():
-                        if 0 < len(ags) < len(monitors):
-                            target_item = it
-                            break
-                    if not target_item:
-                        for it, ags in item_queries.items():
-                            if len(ags) < len(monitors):
-                                target_item = it
-                                break
-                    if not target_item:
-                        target_item = engine._items[0]
-                        
-                    available_agents = [a for a in monitors if a not in item_queries[target_item]]
-                    if not available_agents:
-                        available_agents = monitors
-                    monitor = available_agents[0]
-                    service = target_item
-                else: 
-                    monitor, service = engine.select_query({
-                        'remaining_turns': remaining,
-                        'queried_pairs': queried_pairs,
-                    })
+                res = env.submit_diagnosis(proposed)
+                if engine.adaptation_count > 0:
+                    post_adaptation_commit_turn = env.turn
+                    post_adaptation_wrong_commit = not res.get("correct", False)
+                    ws.post_adaptation_commit_turn = post_adaptation_commit_turn
+                    ws.post_adaptation_wrong_commit = post_adaptation_wrong_commit
+                # Final analytical telemetry pass
+                self._enrich_telemetry(ws, res, env, engine)
+                res["final_workspace"] = ws
+                return res
 
+            if mode == "ESCALATE":
+                ws.family_search_outcome = family_search_outcome or "escalated"
+                if engine.adaptation_count > 0:
+                    post_adaptation_escalation_turn = env.turn
+                    ws.post_adaptation_escalation_turn = post_adaptation_escalation_turn
+                res = {"escalated": True, "abstained": True}
+                self._enrich_telemetry(ws, res, env, engine)
+                res["final_workspace"] = ws
+                return res
+
+            elif mode == "RESET_TRUST":
+                engine.reset_trust()
+                continue
+
+            elif mode == "ADAPT_STRUCTURE":
+                family_search_trigger = "rule0_structural_contradiction"
+                gen = engine._current_generator
+                if gen is None or not hasattr(gen, 'adjacent_families'):
+                    family_search_outcome = "exhausted"
+                    continue
+
+                candidates = gen.adjacent_families()
+                if not candidates:
+                    family_search_outcome = "exhausted"
+                    continue
+
+                # Save current state for rollback
+                saved_hypotheses = [dict(h) for h in engine._hypotheses]
+                saved_queried = dict(engine._queried_values)
+                saved_generator = engine._current_generator
+                saved_adaptation_count = engine.adaptation_count
+
+                # Test each candidate, rank by structural fit
+                best_result, best_spec = None, None
+                from deic_core.hypothesis import HypothesisGenerator
+
+                for spec in candidates:
+                    candidate_specs_tested.append(str(spec))
+                    replay_result = engine.reinitialize_beliefs(HypothesisGenerator.from_spec(spec))
+                    if replay_result['active_hypotheses'] > 0:
+                        if best_result is None or self._is_better_fit(replay_result, best_result):
+                            best_result, best_spec = replay_result, spec
+
+                if best_spec is not None:
+                    engine.reinitialize_beliefs(HypothesisGenerator.from_spec(best_spec))
+                    engine.adaptation_count = saved_adaptation_count + 1
+                    if self.enable_adapt_refine and engine._trusted_source is not None:
+                        # The prior contradiction is now explained by the
+                        # adapted family, so don't let the old Rule 0 spike
+                        # force an immediate post-adaptation escalation.
+                        engine._suspicion_scores[engine._trusted_source] = 0
+                    family_search_outcome = "adopted"
+                    adaptation_turn = env.turn
+                    remaining_budget_at_adaptation = max(0, remaining)
+                    adaptation_before_full_coverage = (
+                        len(engine._queried_values) < len(engine._items)
+                    )
+                else:
+                    engine._hypotheses, engine._queried_values, engine._current_generator = saved_hypotheses, saved_queried, saved_generator
+                    engine.adaptation_count = saved_adaptation_count + 1
+                    family_search_outcome = "rejected"
+                continue
+
+            elif mode in ("EXPLORE", "REFINE", "ADAPT_REFINE"):
+                if engine.adaptation_count > 0:
+                    post_adaptation_queries += 1
+
+                monitor, service = None, None
+                if mode == "EXPLORE" and engine._trusted_source is None:
+                    # DIAGONAL PROBING
+                    monitor = monitors[env.turn % len(monitors)]
+                    unqueried = [it for it in engine._items if it not in engine._queried_values]
+                    service = unqueried[0] if unqueried else engine._items[env.turn % len(engine._items)]
+                    
+                    if (monitor, service) in queried_pairs:
+                        monitor, service = engine.select_query({'remaining_turns': remaining, 'queried_pairs': queried_pairs})
+                else: 
+                    monitor, service = engine.select_query({'remaining_turns': remaining, 'queried_pairs': queried_pairs})
+
+                pre_query_entropy = ws.entropy
                 result = env.query(monitor, service)
                 queried_pairs.add((monitor, service))
                 item_queries[service].add(monitor)
 
-                if result.get("status") == "timeout":
-                    pass
-                elif "reported_latency" in result:
-                    engine.update_observation(
-                        monitor, service, result["reported_latency"], env.turn
-                    )
+                if "reported_latency" in result:
+                    engine.update_observation(monitor, service, result["reported_latency"], env.turn)
                     if engine._trusted_source is None and not self.adaptive_trust:
                         engine.update_trust()
+                    if engine.adaptation_count > 0:
+                        post_state = inspector.inspect(top_n=1)
+                        post_adaptation_query_value_total += max(
+                            0.0, pre_query_entropy - post_state["entropy"]
+                        )
+
+    def _enrich_telemetry(self, ws, res, env, engine):
+        """Analytical-only ground-truth comparison for failure diagnosis."""
+        affected = set(env.config.affected_group)
+        # nodes queried by THE trusted source
+        trusted = engine._trusted_source
+        queried_by_trusted = set()
+        if trusted:
+            queried_by_trusted = {item for (item, val) in engine._source_observations.get(trusted, [])}
+        
+        missed = affected - queried_by_trusted
+        ws.missed_anomalous_node = len(missed) > 0
+        
+        is_success = res.get("correct", False)
+        is_escalated = res.get("escalated", False)
+        
+        # Blind-spot: Failure + missed node + no adaptation
+        if not is_success and ws.missed_anomalous_node and ws.adaptation_count == 0:
+            ws.coverage_blindspot_triggered = True
+            ws.final_outcome_category = "BLIND_SPOT_FAILURE"
+        elif is_success and ws.adaptation_count > 0:
+            ws.final_outcome_category = "CORRECT_ADAPT_RECOVERY"
+        elif not is_success and ws.adaptation_count > 0:
+            if ws.family_search_outcome == "adopted":
+                # Check if correct family adopted
+                # (Assuming Fixed(gs=X) label format)
+                true_gs = len(affected)
+                adopted_label = ws.current_family_spec
+                if f"gs={true_gs}" in adopted_label:
+                    ws.final_outcome_category = "RECOVERY_FAILURE_POST_ADOPTION"
+                else:
+                    ws.final_outcome_category = "WRONG_FAMILY_ADOPTION"
+            else:
+                ws.final_outcome_category = "ADAPTATION_REJECTED"
+        elif is_escalated:
+            ws.final_outcome_category = "ESCALATED"
+        elif not is_success:
+            ws.final_outcome_category = "STABLE_WRONG_COMMIT"
+        else:
+            ws.final_outcome_category = "STABLE_CORRECT"

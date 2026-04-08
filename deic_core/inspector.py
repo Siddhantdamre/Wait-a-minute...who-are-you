@@ -59,17 +59,24 @@ class BeliefInspector:
         # 6. Trust locked
         trust_locked = self.engine._trusted_source is not None
 
+        # 6a. Active Hypotheses Count
+        active_hyp_count = len([h for h, p in scored_hypotheses if p > 0])
+
         # 7. Query Rationale
         if not trust_locked:
-            if getattr(self.engine, 'adaptive_trust', True):
+            if active_hyp_count == 0:
+                rationale = "CRITICAL: Observation inconsistent with all hypotheses (Trust Open)"
+            elif getattr(self.engine, 'adaptive_trust', True):
                 rationale = "Phase 1: Trust Discovery (seeking divergence)"
             else:
                 rationale = "Phase 1: Trust Discovery (seeking majority consensus)"
         else:
             unqueried_count = sum(1 for it in self.engine._items if it not in self.engine._queried_values)
-            if unqueried_count > 0:
-                if len(scored_hypotheses) > 1:
-                    rationale = f"Phase 2: Structural Elimination (resolving {len(scored_hypotheses)} hypotheses)"
+            if active_hyp_count == 0:
+                rationale = "CRITICAL: Observation inconsistent with all hypotheses (Trust Locked)"
+            elif unqueried_count > 0:
+                if active_hyp_count > 1:
+                    rationale = f"Phase 2: Structural Elimination (resolving {active_hyp_count} hypotheses)"
                 else:
                     rationale = "Completed: Posterior collapsed to single hypothesis"
             else:
@@ -81,6 +88,7 @@ class BeliefInspector:
             'top_hypotheses': top_h,
             'trust_distribution': trust_dist,
             'trusted_source_locked': trust_locked,
+            'active_hypotheses_count': active_hyp_count,
             'query_rationale': rationale
         }
 
@@ -109,6 +117,19 @@ class BeliefInspector:
             top_hypotheses=inspector_data['top_hypotheses'],
             trust_distribution=inspector_data['trust_distribution'],
             trusted_source_locked=inspector_data['trusted_source_locked'],
+            active_hypotheses_count=inspector_data['active_hypotheses_count'],
+            trust_evidence=dict(self.engine._trust_evidence),
+            suspicion_scores=dict(self.engine._suspicion_scores),
+            is_flagged=any(s > 2 for s in self.engine._suspicion_scores.values()),
+            reset_count=self.engine.reset_count,
+            suspicion_triggers=self.engine.suspicion_triggers,
+            adaptation_count=self.engine.adaptation_count,
+            current_family_spec=(
+                str(self.engine._current_generator.family_spec())
+                if self.engine._current_generator
+                and hasattr(self.engine._current_generator, 'family_spec')
+                else ""
+            ),
             query_rationale=inspector_data['query_rationale'],
             all_hypotheses=self.engine.score_hypotheses(),
             items_queried=len(self.engine._queried_values),

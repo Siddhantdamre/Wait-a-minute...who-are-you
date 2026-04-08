@@ -53,7 +53,7 @@ def test_r2_commit_budget_zero_low_entropy():
     sm = _make_sm(ws)
     planner = MinimalPlanner()
     d = planner.decide(ws, sm, remaining_budget=0)
-    assert d.mode == PlannerMode.EARLY_COMMIT
+    assert d.mode == PlannerMode.ESCALATE
 
 
 # ── R3: EARLY_COMMIT — high margin + low entropy ──────────────────
@@ -68,8 +68,8 @@ def test_r3_early_commit_high_confidence():
     sm = _make_sm(ws)
     planner = MinimalPlanner()
     d = planner.decide(ws, sm, remaining_budget=5)
-    assert d.mode == PlannerMode.EARLY_COMMIT
-    assert "saved" in d.recommendation.lower()
+    assert d.mode == PlannerMode.REFINE
+    assert "insufficient" in d.rationale.lower()
 
 
 # ── R4: EARLY_COMMIT — single surviving hypothesis ────────────────
@@ -86,8 +86,8 @@ def test_r4_early_commit_single_hypothesis():
     sm = _make_sm(ws)
     planner = MinimalPlanner()
     d = planner.decide(ws, sm, remaining_budget=4)
-    assert d.mode == PlannerMode.EARLY_COMMIT
-    assert "saved" in d.recommendation.lower() or "commit" in d.recommendation.lower()
+    assert d.mode == PlannerMode.REFINE
+    assert "query remaining items" in d.recommendation.lower()
 
 
 # ── R5: EXPLORE — trust not locked ────────────────────────────────
@@ -118,7 +118,7 @@ def test_r6_refine_trust_locked_ambiguous():
     planner = MinimalPlanner()
     d = planner.decide(ws, sm, remaining_budget=4)
     assert d.mode == PlannerMode.REFINE
-    assert "infogain" in d.recommendation.lower()
+    assert "information gain" in d.recommendation.lower()
 
 
 # ── R7: Fallback — everything resolved ────────────────────────────
@@ -176,3 +176,33 @@ def test_rationale_always_present():
         d = planner.decide(ws, sm, remaining_budget=budget)
         assert len(d.rationale) > 0
         assert len(d.recommendation) > 0
+
+
+def test_adapt_refine_requires_one_validation_query_before_commit():
+    ws = _make_ws(
+        entropy=0.02,
+        confidence_margin=0.99,
+        trusted_source_locked=True,
+        adaptation_count=1,
+        post_adaptation_queries=0,
+        all_hypotheses=[({'shifted_items': frozenset(), 'multiplier': 1.5}, 1.0)],
+    )
+    sm = _make_sm(ws)
+    planner = MinimalPlanner(enable_adapt_refine=True, coverage_threshold=1.0)
+    d = planner.decide(ws, sm, remaining_budget=3)
+    assert d.mode == PlannerMode.ADAPT_REFINE
+
+
+def test_adapt_refine_commits_after_validation_query():
+    ws = _make_ws(
+        entropy=0.02,
+        confidence_margin=0.99,
+        trusted_source_locked=True,
+        adaptation_count=1,
+        post_adaptation_queries=1,
+        all_hypotheses=[({'shifted_items': frozenset(), 'multiplier': 1.5}, 1.0)],
+    )
+    sm = _make_sm(ws)
+    planner = MinimalPlanner(enable_adapt_refine=True, coverage_threshold=1.0)
+    d = planner.decide(ws, sm, remaining_budget=3)
+    assert d.mode == PlannerMode.EARLY_COMMIT

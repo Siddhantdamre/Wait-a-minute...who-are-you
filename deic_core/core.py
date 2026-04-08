@@ -29,8 +29,9 @@ class DEIC:
         answer = engine.propose_state()
     """
 
-    def __init__(self, adaptive_trust=True):
+    def __init__(self, adaptive_trust=True, trust_lock_min_evidence=1):
         self.adaptive_trust = adaptive_trust
+        self.trust_lock_min_evidence = trust_lock_min_evidence
         self._items = []
         self._sources = []
         self._initial_values = {}
@@ -40,6 +41,12 @@ class DEIC:
         self._queried_values = {}       # item -> observed value
         self._trusted_source = None
         self._source_observations = {}  # source -> list of (item, value)
+        self._trust_evidence = {}       # source -> int (consistent shifts)
+        self._suspicion_scores = {}     # source -> int (contradictions)
+        self.reset_count = 0
+        self.suspicion_triggers = 0
+        self.adaptation_count = 0
+        self._current_generator = None
 
     # ------------------------------------------------------------------
     # API: initialize_beliefs
@@ -76,13 +83,17 @@ class DEIC:
         self._queried_values = {}
         self._trusted_source = None
         self._source_observations = {s: [] for s in self._sources}
+        self._trust_evidence = {s: 0 for s in self._sources}
+        self._suspicion_scores = {s: 0 for s in self._sources}
 
         if hypothesis_generator is not None:
             # New path: use the provided generator
+            self._current_generator = hypothesis_generator
             self._hypotheses = hypothesis_generator.generate(self._items)
             self._valid_multipliers = hypothesis_generator.valid_multipliers()
         else:
             # Legacy path: build from env_spec dict (backward compatible)
+            self._current_generator = None
             self._valid_multipliers = list(env_spec.get(
                 'valid_multipliers', [1.2, 1.5, 2.0, 2.5]
             ))
@@ -105,6 +116,69 @@ class DEIC:
                 h['prob'] = priors[i]
 
         self._normalize()
+
+    # ------------------------------------------------------------------
+    # API: reinitialize_beliefs (Phase 14 — Structure Adaptation)
+    # ------------------------------------------------------------------
+    def reinitialize_beliefs(self, hypothesis_generator):
+        """
+        Replace the hypothesis bank with a new generator and replay
+        all trusted historical observations.
+
+        This is the core mechanism for bounded structure adaptation.
+        It preserves:
+          - trusted source identity
+          - source observation history
+          - trust evidence and suspicion scores
+        It replaces:
+          - hypothesis bank
+          - queried values (rebuilt via replay)
+          - posterior (recomputed)
+
+        Input:  hypothesis_generator — a HypothesisGenerator instance
+        Output: dict with replay results:
+          - 'active_hypotheses': int — surviving hypotheses after replay
+          - 'entropy': float — posterior entropy after replay
+          - 'confidence_margin': float — MAP margin after replay
+        State:  Replaces hypothesis bank, recomputes posterior.
+        """
+        self._current_generator = hypothesis_generator
+        self._hypotheses = hypothesis_generator.generate(self._items)
+        self._valid_multipliers = hypothesis_generator.valid_multipliers()
+        self._normalize()
+
+        # Replay trusted historical observations
+        self._queried_values = {}
+        self._absorb_consensus_observations()
+
+        if self._trusted_source is not None:
+            # Replay all observations from the trusted source
+            for item, value in self._source_observations[self._trusted_source]:
+                self._queried_values[item] = value
+
+        self._update_posterior()
+
+        # Compute replay results for candidate ranking
+        active = [h for h in self._hypotheses if h['prob'] > 0]
+        active_count = len(active)
+
+        entropy = 0.0
+        for h in self._hypotheses:
+            if h['prob'] > 0:
+                entropy -= h['prob'] * math.log2(h['prob'])
+
+        margin = 0.0
+        scored = sorted(self._hypotheses, key=lambda x: x['prob'], reverse=True)
+        if len(scored) >= 2:
+            margin = scored[0]['prob'] - scored[1]['prob']
+        elif len(scored) == 1:
+            margin = scored[0]['prob']
+
+        return {
+            'active_hypotheses': active_count,
+            'entropy': entropy,
+            'confidence_margin': margin,
+        }
 
     # ------------------------------------------------------------------
     # API: update_observation
@@ -133,15 +207,18 @@ class DEIC:
         if self._trusted_source is None:
             if self.adaptive_trust:
                 if value != self._initial_values.get(item):
-                    # A shifted value proves this source sees post-shift state
-                    self._trusted_source = source
-                    self._queried_values[item] = value
-                    # Also absorb any previously observed consensus values
-                    # from items where all sources returned baseline
-                    self._absorb_consensus_observations()
-                    self._update_posterior()
+                    # A shifted value provides possible evidence of trust
+                    self._trust_evidence[source] += 1
+                    if self._trust_evidence[source] >= self.trust_lock_min_evidence:
+                        # Sufficient evidence reached — Lock trust
+                        self._trusted_source = source
+                        self._queried_values[item] = value
+                        # Absorb consensus baseline observations
+                        self._absorb_consensus_observations()
+                        self._update_posterior()
                     return
                 else:
+                    # Unshifted — ambiguous. 
                     # Unshifted — ambiguous. But if all sources have now
                     # reported on this item and agree, record consensus.
                     item_obs = [(s, v) for s, obs_list in
@@ -156,8 +233,24 @@ class DEIC:
 
         # Phase 2: Trusted source established — direct structural update
         if source == self._trusted_source:
+            # Level 1: Suspicion Check
+            # Check if value contradicts current MAP prediction
+            active_h = [h for h in self._hypotheses if h['prob'] > 0]
+            if active_h:
+                best_h = max(active_h, key=lambda x: x['prob'])
+                exp = (int(self._initial_values[item] * best_h['m'])
+                       if item in best_h['S']
+                       else self._initial_values[item])
+                if value != exp:
+                    self._suspicion_scores[source] += 1
+                    self.suspicion_triggers += 1
+
             self._queried_values[item] = value
             self._update_posterior()
+            
+            # Rule 0 check: If we hit total collapse, suspicion spikes
+            if not any(h['prob'] > 0 for h in self._hypotheses):
+                self._suspicion_scores[source] += 5 # Massive jump
 
     # ------------------------------------------------------------------
     # API: update_trust
@@ -199,10 +292,22 @@ class DEIC:
                     if self._trusted_source:
                         self._update_posterior()
                         break
-
-        if self._trusted_source:
-            trust[self._trusted_source] = 1.0
         return trust
+
+    def reset_trust(self):
+        """
+        Clear the current trusted source and reset evidence/suspicion.
+        Used by the planner to escape potential Byzantine capture.
+        """
+        self.reset_count += 1
+        self._trusted_source = None
+        self._trust_evidence = {s: 0 for s in self._sources}
+        self._suspicion_scores = {s: 0 for s in self._sources}
+        # Purge queried values (they might be structural lies)
+        self._queried_values = {}
+        # Re-absorb only those where sources agreed (consensus baseline)
+        self._absorb_consensus_observations()
+        self._update_posterior()
 
     # ------------------------------------------------------------------
     # API: score_hypotheses

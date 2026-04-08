@@ -1,203 +1,174 @@
-"""
-DEIC Minimal Planner
-
-A deterministic, mode-based strategy selector that sits above the
-existing DEIC platform stack.  Reads CognitiveState and SelfModel,
-outputs a planner mode with rationale.
-
-Modes:
-    EXPLORE       — Trust not yet established; prioritize source divergence.
-    REFINE        — Trust locked; collapse hypothesis space via InfoGain.
-    EARLY_COMMIT  — Posterior is decisive; stop querying and commit now.
-    ESCALATE      — Budget exhausted with high residual uncertainty.
-
-Inputs:  CognitiveState, SelfModel, remaining_budget
-Outputs: PlannerDecision (mode, rationale, recommendation)
-
-Hard boundaries:
-    - Does NOT modify DEIC core inference logic.
-    - Does NOT redesign the benchmark.
-    - Fully deterministic and interpretable.
-"""
-
-from enum import Enum
+import enum
 from dataclasses import dataclass
-from typing import Optional
-
+from typing import Optional, List, Dict
 from .workspace import CognitiveState
 from .self_model import SelfModel
 
-
-class PlannerMode(Enum):
-    """The four strategic modes the planner can select."""
-    EXPLORE = "EXPLORE"
-    REFINE = "REFINE"
-    EARLY_COMMIT = "EARLY_COMMIT"
-    ESCALATE = "ESCALATE"
-
+class PlannerMode(enum.Enum):
+    EXPLORE = "EXPLORE"           # Discovery of trust / broad latent space
+    REFINE = "REFINE"             # Reducing entropy in a trusted subspace
+    ADAPT_REFINE = "ADAPT_REFINE" # Focused refinement after adopting a new family
+    EARLY_COMMIT = "EARLY_COMMIT" # Threshold met, stopping early
+    ESCALATE = "ESCALATE"         # Budget low, ambiguity high, must abstain
+    RESET_TRUST = "RESET_TRUST"   # Byzantine evidence detected, purge trust
+    ADAPT_STRUCTURE = "ADAPT_STRUCTURE" # Rule 0 contradiction, search over families
 
 @dataclass
 class PlannerDecision:
-    """Output of the MinimalPlanner."""
     mode: PlannerMode
     rationale: str
-    recommendation: str  # advisory text for controller/adapter
-
+    recommendation: Optional[str] = None
 
 class MinimalPlanner:
     """
-    Deterministic, mode-based strategy selector.
-
-    Decision table (evaluated top-to-bottom, first match wins):
-
-    ┌────┬───────────────────────────────────────────────┬──────────────┐
-    │ #  │ Condition                                     │ Mode         │
-    ├────┼───────────────────────────────────────────────┼──────────────┤
-    │ R1 │ budget == 0 AND entropy > 1.0                 │ ESCALATE     │
-    │ R2 │ budget == 0 AND entropy <= 1.0                │ EARLY_COMMIT │
-    │ R3 │ trust locked AND margin >= 0.95 AND ent < 0.1 │ EARLY_COMMIT │
-    │ R4 │ trust locked AND active_hyps == 1             │ EARLY_COMMIT │
-    │ R5 │ trust NOT locked                              │ EXPLORE      │
-    │ R6 │ trust locked AND entropy > 0.0                │ REFINE       │
-    │ R7 │ fallback                                      │ EARLY_COMMIT │
-    └────┴───────────────────────────────────────────────┴──────────────┘
-
-    Parameters:
-        confidence_threshold (float): Margin above which early commit
-            triggers (default 0.95).
-        entropy_floor (float): Entropy below which the posterior is
-            considered collapsed (default 0.10).
-        escalation_entropy (float): Entropy above which budget
-            exhaustion triggers ESCALATE instead of COMMIT (default 1.0).
+    State-aware cognitive planner for DEIC.
+    Determines behavior mode based on Global Workspace and Self-Model.
     """
 
     def __init__(
         self,
         confidence_threshold: float = 0.95,
         entropy_floor: float = 0.10,
-        escalation_entropy: float = 1.0,
+        max_adaptations: int = 2,
+        coverage_threshold: float = 0.85,
+        enable_adapt_refine: bool = False,
+        min_post_adaptation_queries: int = 1,
     ):
         self.confidence_threshold = confidence_threshold
         self.entropy_floor = entropy_floor
-        self.escalation_entropy = escalation_entropy
+        self.max_adaptations = max_adaptations
+        self.coverage_threshold = coverage_threshold
+        self.enable_adapt_refine = enable_adapt_refine
+        self.min_post_adaptation_queries = min_post_adaptation_queries
 
     def decide(
         self,
         ws: CognitiveState,
         sm: SelfModel,
-        remaining_budget: int,
+        remaining_budget: int
     ) -> PlannerDecision:
         """
-        Select a planner mode from CognitiveState + SelfModel + budget.
-
-        Args:
-            ws: Current global workspace snapshot.
-            sm: Current self-model derived from ws.
-            remaining_budget: Number of queries still available.
-
-        Returns:
-            PlannerDecision with mode, rationale, and recommendation.
+        Decision table for Minimal Planner.
         """
         entropy = ws.entropy
         margin = ws.confidence_margin
         trust_locked = ws.trusted_source_locked
-        active_hyps = ws.get("active_hypotheses", len(
-            [h for h, p in ws.all_hypotheses if p > 0]
-        ))
-        has_limitation = sm.limitation_warning is not None
+        active_hyps = ws.get("active_hypotheses_count", 0)
+        # Older tests and some synthetic workspaces don't populate the
+        # explicit count field; infer it from the visible belief lists so
+        # planner semantics stay backward compatible.
+        if active_hyps == 0:
+            all_hypotheses = ws.get("all_hypotheses", [])
+            top_hypotheses = ws.get("top_hypotheses", [])
+            if all_hypotheses:
+                active_hyps = len(all_hypotheses)
+            elif top_hypotheses:
+                active_hyps = len(top_hypotheses)
+        adaptation_count = ws.get("adaptation_count", 0)
+        post_adaptation_queries = ws.get("post_adaptation_queries", 0)
+        coverage = ws.get("items_queried", 0) / max(1, ws.get("items_total", 1))
+        in_adapt_refine = self.enable_adapt_refine and adaptation_count > 0 and trust_locked
 
-        # ── R1: Budget gone + high uncertainty → ESCALATE ──────────
-        if remaining_budget <= 0 and entropy > self.escalation_entropy:
+        # ── R0: Inconsistent Data (Contradiction) ─────────────────
+        if active_hyps == 0:
+            if trust_locked and adaptation_count < self.max_adaptations:
+                return PlannerDecision(
+                    mode=PlannerMode.ADAPT_STRUCTURE,
+                    rationale=(
+                        f"Structural contradiction: 0 hypotheses survive. "
+                        f"Adaptation {adaptation_count}/{self.max_adaptations}. "
+                        f"Triggering bounded structure search."
+                    ),
+                    recommendation="Test adjacent families against trusted historical data."
+                )
             return PlannerDecision(
                 mode=PlannerMode.ESCALATE,
                 rationale=(
-                    f"Budget exhausted with entropy={entropy:.2f} "
-                    f"(>{self.escalation_entropy:.2f}). "
-                    f"Residual ambiguity among {active_hyps} hypotheses "
-                    f"cannot be resolved."
+                    f"Structural contradiction: 0 hypotheses survive. "
+                    f"{'Limit reached.' if trust_locked else 'Trust not locked.'}"
                 ),
-                recommendation="Commit best guess but flag low confidence.",
+                recommendation="Abstain due to unresolvable contradiction."
             )
 
-        # ── R2: Budget gone + acceptable uncertainty → EARLY_COMMIT ─
-        if remaining_budget <= 0:
+        # ── R1: Critical Suspicion (Byzantine Detection) ──────────
+        max_suspicion = max(ws.suspicion_scores.values()) if ws.suspicion_scores else 0
+        if trust_locked and max_suspicion >= 5:
+            if remaining_budget >= 5:
+                return PlannerDecision(
+                    mode=PlannerMode.RESET_TRUST,
+                    rationale=f"Trusted source highly suspicious (score={max_suspicion}).",
+                    recommendation="Purge trusted source and re-enter discovery."
+                )
+            else:
+                return PlannerDecision(
+                    mode=PlannerMode.ESCALATE,
+                    rationale=f"Suspicious source + low budget. Cannot safely resolve.",
+                    recommendation="Abstain to prevent capture."
+                )
+
+        # ── R2: Budget gone + high uncertainty → ESCALATE ──────────
+        if remaining_budget <= 0 and margin < self.confidence_threshold:
             return PlannerDecision(
-                mode=PlannerMode.EARLY_COMMIT,
-                rationale=(
-                    f"Budget exhausted with entropy={entropy:.2f} "
-                    f"(≤{self.escalation_entropy:.2f}). "
-                    f"Posterior is sufficiently concentrated."
-                ),
-                recommendation="Commit MAP estimate.",
+                mode=PlannerMode.ESCALATE,
+                rationale=f"Budget exhausted. Margin={margin:.2f} < {self.confidence_threshold}.",
+                recommendation="Abstain from committing low confidence.",
             )
 
-        # ── R3: High confidence + low entropy → EARLY_COMMIT ──────
-        if (
-            trust_locked
-            and margin >= self.confidence_threshold
-            and entropy < self.entropy_floor
-        ):
-            return PlannerDecision(
-                mode=PlannerMode.EARLY_COMMIT,
-                rationale=(
-                    f"Confidence margin={margin:.2f} "
-                    f"(≥{self.confidence_threshold:.2f}) with "
-                    f"entropy={entropy:.3f} "
-                    f"(<{self.entropy_floor:.2f}). "
-                    f"Further queries unlikely to change outcome."
-                ),
-                recommendation=(
-                    f"Commit now; {remaining_budget} queries saved."
-                ),
-            )
+        # ── R3: Commit logic (Margin + Coverage) ──────────────────────
+        # Only commit if we have enough evidence AND have checked enough items
+        if margin >= self.confidence_threshold or (trust_locked and active_hyps <= 1):
+            if in_adapt_refine:
+                if post_adaptation_queries >= self.min_post_adaptation_queries or remaining_budget <= 1:
+                    return PlannerDecision(
+                        mode=PlannerMode.EARLY_COMMIT,
+                        rationale=(
+                            f"Post-adaptation confidence is sufficient after {post_adaptation_queries} "
+                            f"focused query(s). Margin={margin:.2f}, Active={active_hyps}."
+                        ),
+                        recommendation="Commit using the adapted family before budget expires."
+                    )
+                return PlannerDecision(
+                    mode=PlannerMode.ADAPT_REFINE,
+                    rationale=(
+                        f"Adapted family adopted. Need {self.min_post_adaptation_queries} focused "
+                        f"post-adaptation query before commit."
+                    ),
+                    recommendation="Use one high-value query to validate the adapted family."
+                )
+            if coverage >= self.coverage_threshold or remaining_budget <= 2:
+                return PlannerDecision(
+                    mode=PlannerMode.EARLY_COMMIT,
+                    rationale=f"Margin={margin:.2f}, Active={active_hyps}, Coverage={coverage:.1%}.",
+                    recommendation="Submit best candidate diagnosis."
+                )
+            else:
+                return PlannerDecision(
+                    mode=PlannerMode.REFINE,
+                    rationale=f"Uncertainty low but coverage {coverage:.1%} is insufficient. Verifying structure.",
+                    recommendation="Query remaining items to ensure no hidden structural anomalies."
+                )
 
-        # ── R4: Single surviving hypothesis → EARLY_COMMIT ────────
-        if trust_locked and active_hyps <= 1:
-            return PlannerDecision(
-                mode=PlannerMode.EARLY_COMMIT,
-                rationale=(
-                    "Posterior collapsed to a single hypothesis. "
-                    "No further discrimination possible."
-                ),
-                recommendation=(
-                    f"Commit immediately; {remaining_budget} queries saved."
-                ),
-            )
-
-        # ── R5: Trust not yet established → EXPLORE ────────────────
+        # ── R4: Trust not yet established → EXPLORE ────────────────
         if not trust_locked:
             return PlannerDecision(
                 mode=PlannerMode.EXPLORE,
-                rationale=(
-                    "Trust phase incomplete. Must identify a reliable "
-                    "source before structural refinement can begin."
-                ),
-                recommendation=(
-                    "Query diverse sources on the same item to force "
-                    "divergence and lock trust."
-                ),
+                rationale="Trust phase incomplete.",
+                recommendation="Observe item correlations across sources."
             )
 
-        # ── R6: Trust locked, ambiguity remains → REFINE ──────────
-        if trust_locked and entropy > 0.0:
-            qualifier = ""
-            if has_limitation:
-                qualifier = f" (Warning: {sm.limitation_warning})"
+        # ── R5: Default → REFINE ──────────────────────────────────
+        if in_adapt_refine:
             return PlannerDecision(
-                mode=PlannerMode.REFINE,
+                mode=PlannerMode.ADAPT_REFINE,
                 rationale=(
-                    f"Trust locked. Refining among {active_hyps} "
-                    f"hypotheses (entropy={entropy:.2f}).{qualifier}"
+                    f"Refining adapted family over {active_hyps} hyps with "
+                    f"{remaining_budget} turns remaining."
                 ),
-                recommendation=(
-                    "Use InfoGain query selection to maximally "
-                    "discriminate remaining hypotheses."
-                ),
+                recommendation="Select high information gain query from trusted source."
             )
 
-        # ── R7: Fallback → EARLY_COMMIT ────────────────────────────
         return PlannerDecision(
-            mode=PlannerMode.EARLY_COMMIT,
-            rationale="All conditions resolved. Defaulting to commit.",
-            recommendation="Commit MAP estimate.",
+            mode=PlannerMode.REFINE,
+            rationale=f"Refining belief over {active_hyps} hyps (margin={margin:.2f}).",
+            recommendation="Select high information gain query from trusted source."
         )

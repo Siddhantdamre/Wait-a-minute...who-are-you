@@ -136,6 +136,18 @@ class CyberIncidentEnvironment:
             "queries_used": self.turn
         }
 
+    def escalate_ambiguity(self):
+        """Submit that the operator/system cannot safely conclude a diagnosis."""
+        self.terminated = True
+        return {
+            "correct": None,      # Explicitly None to distinguish from failure
+            "escalated": True,
+            "abstained": True,
+            "resolution_status": "ESCALATED",
+            "errors": "Abstaining due to unresolvable ambiguity.",
+            "queries_used": self.turn
+        }
+
 
 def generate_cyber_episodes(n, seed_offset=0):
     return [CyberEpisodeConfig(seed=seed_offset + i) for i in range(n)]

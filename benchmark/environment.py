@@ -191,6 +191,18 @@ class ProceduralEnvironment:
                 "budget_used": self.turn
             }
         
+        elif action_type == "escalate_c6_unresolved":
+            self.terminated = True
+            return {
+                "status": "protocol_terminated",
+                "correct": None,
+                "escalated": True,
+                "abstained": True,
+                "resolution_status": "ESCALATED",
+                "errors": "Abstaining due to unresolvable C6 structural ambiguity.",
+                "budget_used": self.turn
+            }
+        
         return {"error": "Unknown action type."}
     
     def _trigger_shift_1(self):

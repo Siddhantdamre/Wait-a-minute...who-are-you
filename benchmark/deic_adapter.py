@@ -10,7 +10,14 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-from deic_core import DEIC, BeliefInspector, CommitController, MinimalPlanner, SelfModel
+from deic_core import (
+    DEIC,
+    BeliefInspector,
+    CommitController,
+    MinimalPlanner,
+    SelfModel,
+    benchmark_generator,
+)
 
 
 def _trajectory_entry(action, fault_prior):
@@ -23,11 +30,23 @@ class DEICBenchmarkAdapter:
     all inference to the standalone DEIC module.
     """
 
-    def __init__(self, adaptive_trust=True, use_controller=False, use_planner=False, memory=None):
+    def __init__(
+        self,
+        adaptive_trust=True,
+        use_controller=False,
+        use_planner=False,
+        memory=None,
+        confidence_threshold=0.95,
+        entropy_floor=0.10,
+        enable_adapt_refine=True,
+    ):
         self.adaptive_trust = adaptive_trust
         self.use_controller = use_controller
         self.use_planner = use_planner
         self.memory = memory
+        self.confidence_threshold = confidence_threshold
+        self.entropy_floor = entropy_floor
+        self.enable_adapt_refine = enable_adapt_refine
 
     def solve(self, env):
         initial_state = env.get_initial_state()
@@ -37,13 +56,15 @@ class DEICBenchmarkAdapter:
 
         # 1. Initialize DEIC
         engine = DEIC(adaptive_trust=self.adaptive_trust)
-        engine.initialize_beliefs({
-            'items': items,
-            'sources': agents,
-            'group_size': 4,
-            'valid_multipliers': [1.2, 1.5, 2.0, 2.5],
-            'initial_values': dict(initial_state),
-        }, memory=self.memory)
+        engine.initialize_beliefs(
+            {
+                'items': items,
+                'sources': agents,
+                'initial_values': dict(initial_state),
+            },
+            hypothesis_generator=benchmark_generator(),
+            memory=self.memory,
+        )
 
         if self.use_planner:
             return self._solve_with_planner(env, engine, budget, agents)
@@ -109,7 +130,10 @@ class DEICBenchmarkAdapter:
         fault_prior = {a: 0.1 for a in agents}
         queried_pairs = set()
         inspector = BeliefInspector(engine)
-        controller = CommitController()
+        controller = CommitController(
+            confidence_threshold=self.confidence_threshold,
+            entropy_floor=self.entropy_floor
+        )
 
         while True:
             remaining = budget - 1 - env.turn
@@ -120,13 +144,18 @@ class DEICBenchmarkAdapter:
 
             decision = controller.decide(inspector_state, max(0, remaining), has_valid_queries=has_valid_queries)
 
-            if decision in (CommitController.ACTION_COMMIT, CommitController.ACTION_STOP, CommitController.ACTION_ESCALATE):
+            if decision in (CommitController.ACTION_COMMIT, CommitController.ACTION_STOP):
                 proposed = engine.propose_state()
                 commit_action = {"type": "commit_consensus", "proposed_inventory": proposed}
-                if decision == CommitController.ACTION_ESCALATE:
-                    commit_action["escalated"] = True
                 trajectory.append(_trajectory_entry(commit_action, fault_prior))
                 result = env.step(commit_action)
+                result["final_workspace"] = inspector_state
+                return trajectory, result
+            elif decision == CommitController.ACTION_ESCALATE:
+                escalate_action = {"type": "escalate_c6_unresolved"}
+                trajectory.append(_trajectory_entry(escalate_action, fault_prior))
+                result = env.step(escalate_action)
+                result["final_workspace"] = inspector_state
                 return trajectory, result
             
             elif decision == CommitController.ACTION_QUERY:
@@ -151,50 +180,158 @@ class DEICBenchmarkAdapter:
         fault_prior = {a: 0.1 for a in agents}
         queried_pairs = set()
         inspector = BeliefInspector(engine)
-        planner = MinimalPlanner()
+        planner = MinimalPlanner(
+            confidence_threshold=self.confidence_threshold,
+            entropy_floor=self.entropy_floor,
+            enable_adapt_refine=self.enable_adapt_refine,
+        )
         item_queries = {it: set() for it in engine._items}
+
+        # Telemetry for structure adaptation
+        family_search_trigger = ""
+        family_search_outcome = ""
+        candidate_specs_tested = []
+        adaptation_turn = -1
+        remaining_budget_at_adaptation = -1
+        adaptation_before_full_coverage = False
+        post_adaptation_queries = 0
+        post_adaptation_commit_turn = -1
+        post_adaptation_escalation_turn = -1
+        post_adaptation_wrong_commit = False
+        post_adaptation_query_value_total = 0.0
 
         while True:
             remaining = budget - 1 - env.turn
             ws = inspector.workspace()
+            ws.adaptation_count = engine.adaptation_count
+            ws.current_family_spec = str(engine._current_generator.family_spec()) if engine._current_generator and hasattr(engine._current_generator, 'family_spec') else ""
+            ws.candidate_specs_tested = candidate_specs_tested
+            ws.family_search_trigger = family_search_trigger
+            ws.family_search_outcome = family_search_outcome
+            ws.adaptation_turn = adaptation_turn
+            ws.remaining_budget_at_adaptation = remaining_budget_at_adaptation
+            ws.adaptation_before_full_coverage = adaptation_before_full_coverage
+            ws.post_adaptation_queries = post_adaptation_queries
+            ws.post_adaptation_commit_turn = post_adaptation_commit_turn
+            ws.post_adaptation_escalation_turn = post_adaptation_escalation_turn
+            ws.post_adaptation_wrong_commit = post_adaptation_wrong_commit
+            ws.post_adaptation_query_value = (
+                post_adaptation_query_value_total / post_adaptation_queries
+                if post_adaptation_queries > 0 else 0.0
+            )
+
             sm = SelfModel.from_workspace(ws)
             decision = planner.decide(ws, sm, max(0, remaining))
             mode = decision.mode.value
 
-            if mode in ("EARLY_COMMIT", "ESCALATE"):
+            if mode == "EARLY_COMMIT":
                 proposed = engine.propose_state()
                 commit_action = {"type": "commit_consensus", "proposed_inventory": proposed}
-                if mode == "ESCALATE":
-                    commit_action["escalated"] = True
                 entry = _trajectory_entry(commit_action, fault_prior)
                 entry["planner_mode"] = mode
                 trajectory.append(entry)
                 result = env.step(commit_action)
+                if engine.adaptation_count > 0:
+                    post_adaptation_commit_turn = env.turn
+                    post_adaptation_wrong_commit = not result.get("consensus_reached", False)
+                    ws.post_adaptation_commit_turn = post_adaptation_commit_turn
+                    ws.post_adaptation_wrong_commit = post_adaptation_wrong_commit
+                result["final_workspace"] = ws
                 return trajectory, result
-            
-            elif mode in ("EXPLORE", "REFINE"):
+            elif mode == "ESCALATE":
+                escalate_action = {"type": "escalate_c6_unresolved"}
+                entry = _trajectory_entry(escalate_action, fault_prior)
+                entry["planner_mode"] = mode
+                trajectory.append(entry)
+                result = env.step(escalate_action)
+                ws.family_search_outcome = family_search_outcome or "escalated"
+                if engine.adaptation_count > 0:
+                    post_adaptation_escalation_turn = env.turn
+                    ws.post_adaptation_escalation_turn = post_adaptation_escalation_turn
+                result["final_workspace"] = ws
+                return trajectory, result
+            elif mode == "RESET_TRUST":
+                engine.reset_trust()
+                entry = _trajectory_entry({"type": "reset_trust"}, fault_prior)
+                entry["planner_mode"] = mode
+                trajectory.append(entry)
+                continue
+            elif mode == "ADAPT_STRUCTURE":
+                family_search_trigger = "rule0_structural_contradiction"
+                gen = engine._current_generator
+                if gen is None or not hasattr(gen, 'adjacent_families'):
+                    family_search_outcome = "exhausted"
+                    continue
+                candidates = gen.adjacent_families()
+                if not candidates:
+                    family_search_outcome = "exhausted"
+                    continue
+                saved_h = [dict(h) for h in engine._hypotheses]
+                saved_q = dict(engine._queried_values)
+                saved_g = engine._current_generator
+                saved_ac = engine.adaptation_count
+                best_result, best_spec = None, None
+                from deic_core.hypothesis import HypothesisGenerator
+                for spec in candidates:
+                    candidate_specs_tested.append(str(spec))
+                    replay = engine.reinitialize_beliefs(HypothesisGenerator.from_spec(spec))
+                    if replay['active_hypotheses'] > 0:
+                        if best_result is None or (replay['active_hypotheses'] > best_result['active_hypotheses'] or (replay['active_hypotheses'] == best_result['active_hypotheses'] and replay['confidence_margin'] > best_result['confidence_margin'])):
+                            best_result = replay
+                            best_spec = spec
+                if best_spec is not None:
+                    engine.reinitialize_beliefs(HypothesisGenerator.from_spec(best_spec))
+                    engine.adaptation_count = saved_ac + 1
+                    if self.enable_adapt_refine and engine._trusted_source is not None:
+                        engine._suspicion_scores[engine._trusted_source] = 0
+                    family_search_outcome = "adopted"
+                    adaptation_turn = env.turn
+                    remaining_budget_at_adaptation = max(0, remaining)
+                    adaptation_before_full_coverage = (
+                        len(engine._queried_values) < len(engine._items)
+                    )
+                else:
+                    engine._hypotheses = saved_h
+                    engine._queried_values = saved_q
+                    engine._current_generator = saved_g
+                    engine.adaptation_count = saved_ac + 1
+                    family_search_outcome = "rejected"
+                entry = _trajectory_entry({"type": "adapt_structure", "outcome": family_search_outcome}, fault_prior)
+                entry["planner_mode"] = mode
+                trajectory.append(entry)
+                continue
+
+            elif mode in ("EXPLORE", "REFINE", "ADAPT_REFINE"):
+                if engine.adaptation_count > 0:
+                    post_adaptation_queries += 1
                 source, item = None, None
                 
-                if mode == "EXPLORE":
-                    # Hammer same-item across sources until trust locked
-                    target_item = None
-                    for it, ags in item_queries.items():
-                        if 0 < len(ags) < len(agents):
-                            target_item = it
-                            break
-                    if not target_item:
-                        for it, ags in item_queries.items():
-                            if len(ags) < len(agents):
-                                target_item = it
-                                break
-                    if not target_item:
-                        target_item = engine._items[0]
-                        
-                    available_agents = [a for a in agents if a not in item_queries[target_item]]
-                    if not available_agents:
-                        available_agents = agents
-                    source = available_agents[0]
-                    item = target_item
+                if mode == "EXPLORE" and engine._trusted_source is None:
+                    # DIAGONAL PROBING: Query different sources on unique items
+                    # to maximize the chance of hitting a shifted value early.
+                    # We pick an agent and give them an item they haven't seen.
+                    source = agents[env.turn % len(agents)]
+                    
+                    # Pick an unqueried item, or rotate
+                    unqueried = [it for it in engine._items if it not in engine._queried_values]
+                    if unqueried:
+                        item = unqueried[0]
+                    else:
+                        item = engine._items[env.turn % len(engine._items)]
+                    
+                    # Ensure this specific (source, item) hasn't been queried
+                    if (source, item) in queried_pairs:
+                        # Fallback to engine's suggestion if diagonal is blocked
+                        source, item = engine.select_query({
+                            'remaining_turns': remaining,
+                            'queried_pairs': queried_pairs,
+                        })
+                elif mode == "EXPLORE":
+                    # Trust locked but still in EXPLORE? Fallback to engine.
+                    source, item = engine.select_query({
+                        'remaining_turns': remaining,
+                        'queried_pairs': queried_pairs,
+                    })
                 else: 
                     # REFINE mode: InfoGain query
                     source, item = engine.select_query({
@@ -207,6 +344,7 @@ class DEICBenchmarkAdapter:
                 entry["planner_mode"] = mode
                 trajectory.append(entry)
                 
+                pre_query_entropy = ws.entropy
                 obs = env.step(action)
                 queried_pairs.add((source, item))
                 item_queries[item].add(source)
@@ -217,3 +355,8 @@ class DEICBenchmarkAdapter:
                     engine.update_observation(source, item, obs["reported_quantity"], env.turn)
                     if engine._trusted_source is None and not self.adaptive_trust:
                         engine.update_trust()
+                    if engine.adaptation_count > 0:
+                        post_state = inspector.inspect(top_n=1)
+                        post_adaptation_query_value_total += max(
+                            0.0, pre_query_entropy - post_state["entropy"]
+                        )

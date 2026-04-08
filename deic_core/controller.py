@@ -9,6 +9,10 @@ class CommitController:
     ACTION_ESCALATE = "ESCALATE_UNCERTAINTY"
     ACTION_STOP = "STOP"
 
+    def __init__(self, confidence_threshold=0.95, entropy_floor=0.10):
+        self.confidence_threshold = confidence_threshold
+        self.entropy_floor = entropy_floor
+
     def decide(self, inspector_state, remaining_budget, has_valid_queries=True):
         """
         Evaluate cognitive state to determine if inference should stop or continue.
@@ -26,8 +30,13 @@ class CommitController:
         trust_locked = inspector_state['trusted_source_locked']
         rationale = inspector_state['query_rationale']
 
+        # RULE 0 — INCONSISTENT DATA
+        active_count = inspector_state.get('active_hypotheses_count')
+        if active_count == 0 and not inspector_state.get('top_hypotheses'):
+            return self.ACTION_ESCALATE
+
         # RULE 1 — HIGH-CONFIDENCE COMMIT
-        if margin >= 0.95 and entropy <= 0.10:
+        if margin >= self.confidence_threshold and entropy <= self.entropy_floor:
             return self.ACTION_COMMIT
 
         # RULE 2 — STRUCTURAL-COMPLETION COMMIT
@@ -36,11 +45,11 @@ class CommitController:
                 return self.ACTION_COMMIT
 
         # RULE 3 — BUDGET-EXHAUSTED COMMIT
-        if remaining_budget == 0 and margin > 0.0:
+        if remaining_budget == 0 and margin >= self.confidence_threshold:
             return self.ACTION_COMMIT
 
         # RULE 4 — BUDGET-EXHAUSTED ESCALATION
-        if remaining_budget == 0 and margin == 0.0:
+        if remaining_budget == 0 and margin < self.confidence_threshold:
             return self.ACTION_ESCALATE
 
         # RULE 5 — NO-USEFUL-QUERY STOP

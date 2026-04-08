@@ -13,9 +13,9 @@ def test_rule2_structural_completion():
 
 def test_rule3_budget_exhausted():
     c = CommitController()
-    # Not enough to be rule 1 or 2, but budget is 0.
+    # Low-confidence budget exhaustion should abstain rather than guess.
     action = c.decide({'confidence_margin': 0.40, 'entropy': 1.5, 'trusted_source_locked': False, 'query_rationale': 'Phase 1: Trust Discovery'}, 0)
-    assert action == "COMMIT"
+    assert action == "ESCALATE_UNCERTAINTY"
 
 def test_rule4_escalation():
     c = CommitController()

@@ -84,6 +84,17 @@ This document serves as the official historical ledger tracking the structural e
 
 ---
 
+## 🏆 MILESTONE 9: Bounded Adaptive Recovery & Cross-Domain Validation
+**Status**: `COMPLETED` | **Code**: `deic_core/planner.py`, `deic_core/workspace.py`, `benchmark/deic_adapter.py`, `experiments/cyber_transfer/adapter.py`, `experiments/clinical_transfer/adapter.py`
+
+*   **Bounded Family Repair:** Added a deterministic structure-adaptation loop around the frozen DEIC posterior core. When Rule 0 contradiction collapses the active hypothesis bank under trusted replayable evidence, the planner can test adjacent bounded family templates instead of only escalating.
+*   **Operational Recovery:** The key fix was not broader family search but post-adaptation execution. The guarded `ADAPT_REFINE` mode clears the resolved structural-contradiction suspicion spike, performs one focused validation query under the adopted family, and then commits without waiting for the original full-coverage target.
+*   **Cross-Domain Validation:** This policy generalized across cyber and clinical fixed-family mismatch cases. Budget-12 anomaly accuracy improved from `0.00 -> 0.46` (`gs=3`) and `0.00 -> 0.69` (`gs=5`) in cyber, with parallel gains in the clinical fixed-family mismatch harness. Standard cyber `gs=4` and planner-integrated C6 baselines stayed unchanged.
+*   **Safety Result:** Frozen regression guards remained intact throughout the change. This is a strong bounded adaptive-cognition result, not a claim of open-ended structure invention, causal reasoning, or AGI.
+*   **Next Bottleneck:** The remaining weakness is now sharply localized to budget-8 contradiction discovery. Adaptation works once it triggers; the next phase is earlier contradiction discovery under tight budgets.
+
+---
+
 ## 📂 PARALLEL DEPLOYMENTS (Ancillary Projects)
 
 1. **Smart Cultural Storyteller (Hybrid Failover RAG)** 

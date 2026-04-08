@@ -35,9 +35,33 @@ class CognitiveState:
     top_hypotheses: List[Tuple[dict, float]] = field(default_factory=list)
     trust_distribution: Dict[str, float] = field(default_factory=dict)
     trusted_source_locked: bool = False
-    query_rationale: str = ""
+    active_hypotheses_count: int = 0
+    trust_evidence: dict = field(default_factory=dict)
+    suspicion_scores: dict = field(default_factory=dict)
+    is_flagged: bool = False
+    reset_count: int = 0
+    suspicion_triggers: int = 0
 
+    # ── Structure Adaptation telemetry (Phase 14/15) ──────────────────
+    adaptation_count: int = 0
+    current_family_spec: str = ""
+    candidate_specs_tested: List[str] = field(default_factory=list)
+    family_search_trigger: str = ""    # "" | "rule0_structural_contradiction"
+    family_search_outcome: str = ""    # "" | "adopted" | "rejected" | "exhausted" | "escalated"
+    adaptation_turn: int = -1
+    remaining_budget_at_adaptation: int = -1
+    adaptation_before_full_coverage: bool = False
+    post_adaptation_queries: int = 0
+    post_adaptation_commit_turn: int = -1
+    post_adaptation_escalation_turn: int = -1
+    post_adaptation_wrong_commit: bool = False
+    post_adaptation_query_value: float = 0.0
+    missed_anomalous_node: bool = False
+    coverage_blindspot_triggered: bool = False
+    final_outcome_category: str = "" # e.g. "BLIND_SPOT_FAILURE", "CORRECT_ADAPT_RECOVERY"
+    
     # ── Extended workspace fields ────────────────────────────────────
+    query_rationale: str = ""
     all_hypotheses: List[Tuple[dict, float]] = field(default_factory=list)
     items_queried: int = 0
     items_total: int = 0
@@ -46,6 +70,29 @@ class CognitiveState:
     last_action_reason: str = ""    # filled by adapter after action
     episode_count: int = 0
     memory_summary: Dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def from_engine(cls, engine, **kwargs):
+        from .inspector import BeliefInspector
+        inspector = BeliefInspector(engine)
+        state = cls(
+            entropy=engine.calculate_entropy() if hasattr(engine, 'calculate_entropy') else 0.0,
+            confidence_margin=inspector.inspect(top_n=1)['confidence_margin'],
+            top_hypotheses=engine.score_hypotheses()[:5],
+            active_hypotheses_count=len([h for h in engine._hypotheses if h['prob'] > 1e-6]),
+            trusted_source_locked=engine._trusted_source is not None,
+            trust_evidence=dict(engine._trust_evidence),
+            suspicion_scores=dict(engine._suspicion_scores),
+            is_flagged=any(s > 2 for s in engine._suspicion_scores.values()),
+            reset_count=engine.reset_count,
+            suspicion_triggers=engine.suspicion_triggers,
+            query_rationale=inspector.inspect(top_n=1)['query_rationale'],
+            all_hypotheses=engine.score_hypotheses(),
+            items_queried=len(engine._queried_values),
+            items_total=len(engine._items),
+            **kwargs
+        )
+        return state
 
     # ── Dict-like access for backward compatibility ──────────────────
 

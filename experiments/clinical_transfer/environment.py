@@ -132,6 +132,18 @@ class ClinicalEnvironment:
             "queries_used": self.turn
         }
 
+    def escalate_uncertainty(self):
+        """Submit that the nurse/system cannot safely ascertain stable vs deteriorating states."""
+        self.terminated = True
+        return {
+            "correct": None,      # Explicitly None to distinguish from failure
+            "escalated": True,
+            "abstained": True,
+            "resolution_status": "ESCALATED",
+            "errors": "Abstaining due to unresolved clinical ambiguity.",
+            "queries_used": self.turn
+        }
+
 
 def generate_clinical_episodes(n, seed_offset=0):
     return [ClinicalEpisodeConfig(seed=seed_offset + i) for i in range(n)]
