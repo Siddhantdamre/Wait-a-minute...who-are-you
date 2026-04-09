@@ -36,6 +36,7 @@ class DEICBenchmarkAdapter:
         use_controller=False,
         use_planner=False,
         memory=None,
+        enable_self_model=True,
         confidence_threshold=0.95,
         entropy_floor=0.10,
         enable_adapt_refine=True,
@@ -46,6 +47,7 @@ class DEICBenchmarkAdapter:
         self.use_controller = use_controller
         self.use_planner = use_planner
         self.memory = memory
+        self.enable_self_model = enable_self_model
         self.confidence_threshold = confidence_threshold
         self.entropy_floor = entropy_floor
         self.enable_adapt_refine = enable_adapt_refine
@@ -81,6 +83,7 @@ class DEICBenchmarkAdapter:
         trajectory = []
         fault_prior = {a: 0.1 for a in agents}
         queried_pairs = set()
+        inspector = BeliefInspector(engine)
 
         # 2. Phase A: Trust discovery
         while env.turn < budget - 1 and engine._trusted_source is None:
@@ -127,6 +130,7 @@ class DEICBenchmarkAdapter:
         commit_action = {"type": "commit_consensus", "proposed_inventory": proposed}
         trajectory.append(_trajectory_entry(commit_action, fault_prior))
         result = env.step(commit_action)
+        result["final_workspace"] = inspector.workspace(memory=self.memory)
         return trajectory, result
 
     def _solve_with_controller(self, env, engine, budget, agents):
@@ -153,13 +157,13 @@ class DEICBenchmarkAdapter:
                 commit_action = {"type": "commit_consensus", "proposed_inventory": proposed}
                 trajectory.append(_trajectory_entry(commit_action, fault_prior))
                 result = env.step(commit_action)
-                result["final_workspace"] = inspector_state
+                result["final_workspace"] = inspector.workspace(memory=self.memory)
                 return trajectory, result
             elif decision == CommitController.ACTION_ESCALATE:
                 escalate_action = {"type": "escalate_c6_unresolved"}
                 trajectory.append(_trajectory_entry(escalate_action, fault_prior))
                 result = env.step(escalate_action)
-                result["final_workspace"] = inspector_state
+                result["final_workspace"] = inspector.workspace(memory=self.memory)
                 return trajectory, result
             
             elif decision == CommitController.ACTION_QUERY:
@@ -213,7 +217,7 @@ class DEICBenchmarkAdapter:
 
         while True:
             remaining = budget - 1 - env.turn
-            ws = inspector.workspace()
+            ws = inspector.workspace(memory=self.memory)
             ws.adaptation_count = engine.adaptation_count
             ws.current_family_spec = str(engine._current_generator.family_spec()) if engine._current_generator and hasattr(engine._current_generator, 'family_spec') else ""
             ws.candidate_specs_tested = candidate_specs_tested
@@ -248,7 +252,7 @@ class DEICBenchmarkAdapter:
                 if post_adaptation_queries > 0 else 0.0
             )
 
-            sm = SelfModel.from_workspace(ws)
+            sm = SelfModel.from_workspace(ws) if self.enable_self_model else None
             decision = planner.decide(ws, sm, max(0, remaining))
             mode = decision.mode.value
 
@@ -257,6 +261,10 @@ class DEICBenchmarkAdapter:
                 commit_action = {"type": "commit_consensus", "proposed_inventory": proposed}
                 entry = _trajectory_entry(commit_action, fault_prior)
                 entry["planner_mode"] = mode
+                entry["rationale"] = decision.rationale
+                entry["recommendation"] = decision.recommendation
+                entry["action"] = commit_action
+                entry["remaining_budget"] = max(0, remaining)
                 trajectory.append(entry)
                 result = env.step(commit_action)
                 if engine.adaptation_count > 0:
@@ -270,6 +278,10 @@ class DEICBenchmarkAdapter:
                 escalate_action = {"type": "escalate_c6_unresolved"}
                 entry = _trajectory_entry(escalate_action, fault_prior)
                 entry["planner_mode"] = mode
+                entry["rationale"] = decision.rationale
+                entry["recommendation"] = decision.recommendation
+                entry["action"] = escalate_action
+                entry["remaining_budget"] = max(0, remaining)
                 trajectory.append(entry)
                 result = env.step(escalate_action)
                 ws.family_search_outcome = family_search_outcome or "escalated"
@@ -282,6 +294,10 @@ class DEICBenchmarkAdapter:
                 engine.reset_trust()
                 entry = _trajectory_entry({"type": "reset_trust"}, fault_prior)
                 entry["planner_mode"] = mode
+                entry["rationale"] = decision.rationale
+                entry["recommendation"] = decision.recommendation
+                entry["action"] = {"type": "reset_trust"}
+                entry["remaining_budget"] = max(0, remaining)
                 trajectory.append(entry)
                 continue
             elif mode == "CONTRADICTION_PROBE":
@@ -300,6 +316,10 @@ class DEICBenchmarkAdapter:
                 action = {"type": "query", "target_agent": source, "item_id": item}
                 entry = _trajectory_entry(action, fault_prior)
                 entry["planner_mode"] = mode
+                entry["rationale"] = decision.rationale
+                entry["recommendation"] = decision.recommendation
+                entry["action"] = action
+                entry["remaining_budget"] = max(0, remaining)
                 trajectory.append(entry)
                 pre_query_entropy = ws.entropy
                 obs = env.step(action)
@@ -376,6 +396,10 @@ class DEICBenchmarkAdapter:
                     family_search_outcome = family_search_outcome or "rejected"
                 entry = _trajectory_entry({"type": "adapt_structure", "outcome": family_search_outcome}, fault_prior)
                 entry["planner_mode"] = mode
+                entry["rationale"] = decision.rationale
+                entry["recommendation"] = decision.recommendation
+                entry["action"] = {"type": "adapt_structure", "outcome": family_search_outcome}
+                entry["remaining_budget"] = max(0, remaining)
                 trajectory.append(entry)
                 continue
 
@@ -420,6 +444,10 @@ class DEICBenchmarkAdapter:
                 action = {"type": "query", "target_agent": source, "item_id": item}
                 entry = _trajectory_entry(action, fault_prior)
                 entry["planner_mode"] = mode
+                entry["rationale"] = decision.rationale
+                entry["recommendation"] = decision.recommendation
+                entry["action"] = action
+                entry["remaining_budget"] = max(0, remaining)
                 trajectory.append(entry)
                 
                 pre_query_entropy = ws.entropy

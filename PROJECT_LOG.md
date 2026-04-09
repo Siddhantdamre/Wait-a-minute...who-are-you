@@ -117,13 +117,14 @@ This document serves as the official historical ledger tracking the structural e
 
 ---
 
-## MILESTONE 12: DEIC-CogBench v1 Scaffold
-**Status**: `IN_PROGRESS` | **Code**: `docs/milestones/deic_platform_v1.md`, `benchmarks/exec_meta_adapt/`
+## MILESTONE 12: DEIC-CogBench v1 Runnable Package
+**Status**: `COMPLETED` | **Code**: `benchmarks/exec_meta_adapt/`, `docs/benchmark_v1_report.md`, `docs/milestones/deic_platform_v1.md`
 
-*   **Milestone 0 Freeze:** Added an explicit DEIC Platform v1 freeze document so benchmark work has a stable baseline instead of drifting across phase-specific settings.
-*   **Benchmark Skeleton:** Added the first DEIC-CogBench v1 package structure with task wrappers, split definitions, unified episode schema, scoring utilities, a one-command suite runner, and an ablation runner.
-*   **Metric Intent:** The scaffold promotes benchmark-facing metrics such as abstention, silent failure, false adaptation, trust lock timing, contradiction timing, and post-adaptation recovery into first-class outputs.
-*   **Current Scope:** This is the packaging layer, not a new cognition result. It makes the frozen system externally legible and reproducible so later dynamic-structure and interactive-adaptation work can land on top of it cleanly.
+*   **Contract Frozen:** Locked the benchmark contract in code and docs across task schema, split schema, episode result schema, ablation surface, and CLI behavior.
+*   **Coverage Expanded:** Train split now covers standard inference, adversarial trust, adaptive mismatch, and budget/noise stress across the existing benchmark, cyber, and clinical domains. Held-out transfer is enforced in its own explicit split.
+*   **Ablations Made Runnable:** The package now runs `no_planner`, `no_self_model`, `no_memory`, `no_adaptation`, and `no_safety_circuit` alongside the frozen full baseline instead of leaving part of the ablation surface as prose only.
+*   **Reporting Upgraded:** One suite command now emits a combined summary table, per-domain table, ablation table, trace examples, and a blunt verdict on external legibility. Outputs are written outside committed source paths under `results/deic_cogbench/`.
+*   **Milestone Result:** The benchmark package now reads as a reusable bounded cognitive evaluation artifact rather than a repo-local experiment scaffold. This is still packaging work, not a new cognition result.
 
 ---
 

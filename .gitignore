@@ -40,6 +40,7 @@ backup_*/
 
 # Benchmark run artifacts
 benchmarks/exec_meta_adapt/results/*.json
+results/deic_cogbench/
 
 # Large data files (>100MB, GitHub limit)
 *.csv

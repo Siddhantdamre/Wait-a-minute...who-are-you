@@ -74,9 +74,9 @@ Benchmark packaging should use one explicit baseline config rather than drifting
 - `enable_upward_capacity_trigger=False`
 - benchmark planner confidence threshold fixed to the current validated setting
 - transfer coverage threshold fixed to the current validated setting
-- cross-episode memory disabled for benchmark v1 per-episode baselines so runs stay independent and reproducible
+- cross-episode memory enabled inside each task stream and reset between task specs so the memory layer is benchmark-visible without leaking across benchmark families
 
-This choice keeps the frozen bounded-adaptive path intact while avoiding cross-episode leakage in the first public benchmark release.
+This choice keeps the frozen bounded-adaptive path intact while exposing memory as a measurable subsystem layer in the benchmark package.
 
 ---
 

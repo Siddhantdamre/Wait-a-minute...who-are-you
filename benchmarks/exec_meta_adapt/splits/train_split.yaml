@@ -1,7 +1,8 @@
 {
+  "contract_version": "1.0",
   "suite_name": "DEIC-CogBench v1",
   "split": "train",
-  "notes": "JSON-compatible YAML so the suite can load it with the Python standard library.",
+  "notes": "Canonical train split for baseline, trust, anomaly, and budget/noise coverage.",
   "tasks": [
     {
       "task": "c6_standard",
@@ -25,18 +26,41 @@
       "seed_offset": 720000,
       "adapter_variant": "frozen_full",
       "condition": "active_deception",
-      "notes": "Byzantine trust stress case."
+      "notes": "Benchmark trust/adversarial condition."
+    },
+    {
+      "task": "c6_standard",
+      "domain": "benchmark",
+      "task_class": "budget_noise_stress",
+      "split": "train",
+      "n_episodes": 50,
+      "budget": 6,
+      "seed_offset": 740000,
+      "adapter_variant": "frozen_full",
+      "condition": "obvious_noise",
+      "notes": "Budget-constrained noise stress."
     },
     {
       "task": "cyber_standard",
       "domain": "cyber",
-      "task_class": "heldout_transfer",
+      "task_class": "standard_inference",
       "split": "train",
       "n_episodes": 50,
       "budget": 8,
       "seed_offset": 100000,
       "adapter_variant": "frozen_full",
-      "notes": "Isomorphic transfer baseline."
+      "notes": "Cross-domain transfer baseline."
+    },
+    {
+      "task": "cyber_standard",
+      "domain": "cyber",
+      "task_class": "adversarial_trust",
+      "split": "train",
+      "n_episodes": 50,
+      "budget": 8,
+      "seed_offset": 120000,
+      "adapter_variant": "frozen_full",
+      "notes": "Different held-in seeds under stale-monitor trust pressure."
     },
     {
       "task": "cyber_anomaly",
@@ -51,15 +75,37 @@
       "notes": "Overflow mismatch."
     },
     {
+      "task": "cyber_standard",
+      "domain": "cyber",
+      "task_class": "budget_noise_stress",
+      "split": "train",
+      "n_episodes": 50,
+      "budget": 6,
+      "seed_offset": 140000,
+      "adapter_variant": "frozen_full",
+      "notes": "Budget starvation stress in cyber transfer."
+    },
+    {
       "task": "clinical_standard",
       "domain": "clinical",
-      "task_class": "heldout_transfer",
+      "task_class": "standard_inference",
       "split": "train",
       "n_episodes": 50,
       "budget": 8,
       "seed_offset": 500000,
       "adapter_variant": "frozen_full",
-      "notes": "Variable-group transfer baseline."
+      "notes": "Variable-group clinical baseline."
+    },
+    {
+      "task": "clinical_standard",
+      "domain": "clinical",
+      "task_class": "adversarial_trust",
+      "split": "train",
+      "n_episodes": 50,
+      "budget": 8,
+      "seed_offset": 520000,
+      "adapter_variant": "frozen_full",
+      "notes": "Delayed-station trust pressure."
     },
     {
       "task": "clinical_anomaly",
@@ -72,6 +118,17 @@
       "adapter_variant": "frozen_full",
       "group_size": 5,
       "notes": "Fixed-family mismatch."
+    },
+    {
+      "task": "clinical_standard",
+      "domain": "clinical",
+      "task_class": "budget_noise_stress",
+      "split": "train",
+      "n_episodes": 50,
+      "budget": 6,
+      "seed_offset": 540000,
+      "adapter_variant": "frozen_full",
+      "notes": "Budget starvation stress in clinical transfer."
     }
   ]
 }

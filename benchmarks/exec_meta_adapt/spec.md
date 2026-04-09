@@ -1,17 +1,36 @@
 # DEIC-CogBench v1 Spec
 
-## Scope
+## Benchmark Spec Summary
 
-DEIC-CogBench v1 evaluates the frozen DEIC Platform v1 baseline on:
+DEIC-CogBench v1 evaluates the frozen DEIC Platform v1 as a bounded cognitive subsystem. The package is designed to be:
 
-- executive function
-- metacognition
-- adaptive learning under partial observability
-- safety-aware abstention
+- runnable from one command
+- schema-stable
+- safety-explicit
+- cross-domain comparable
+- reproducible by seed
 
-This benchmark does not claim general intelligence. It measures a bounded cognitive subsystem with explicit failure accounting.
+It measures a bounded platform, not open-ended intelligence.
 
-## Canonical baseline
+## Contract Version
+
+- `contract_version = 1.0`
+- frozen domains: `benchmark`, `cyber`, `clinical`
+- frozen task classes:
+  - `standard_inference`
+  - `adversarial_trust`
+  - `adaptive_mismatch`
+  - `budget_noise_stress`
+  - `heldout_transfer`
+- frozen ablation surface:
+  - `frozen_full`
+  - `no_planner`
+  - `no_self_model`
+  - `no_memory`
+  - `no_adaptation`
+  - `no_safety_circuit`
+
+## Canonical Baseline
 
 The suite uses `DEIC_PLATFORM_V1` as the main system under test:
 
@@ -20,62 +39,92 @@ The suite uses `DEIC_PLATFORM_V1` as the main system under test:
 - ADAPT_REFINE enabled
 - final contradiction probe enabled
 - upward-capacity trigger disabled
-- no cross-episode memory in baseline runs
+- benchmark confidence thresholds fixed to the validated settings
+- cross-episode memory enabled within each task stream and reset between task specs
 
-## Core task classes
+This keeps the frozen bounded-adaptive architecture intact while making the memory layer benchmark-visible instead of only archival.
 
-### Standard inference
+## Split Format
 
-Normal cases where the supplied family is correct.
+Each split file is JSON-compatible YAML with:
 
-### Adversarial trust
+- `contract_version`
+- `suite_name`
+- `split`
+- `notes`
+- `tasks`
 
-Byzantine or deception-heavy cases where trust isolation matters.
+Each task entry freezes:
 
-### Adaptive mismatch
+- task wrapper name
+- domain
+- task class
+- split
+- episode count
+- budget
+- seed offset
+- adapter variant
+- optional condition
+- optional group size
+- notes
 
-Family mismatch cases such as `gs=3` and `gs=5` against fixed-family assumptions.
+## Task Inventory
 
-### Budget starvation and noise
+### Train split
 
-Cases where the system must choose between risky commitment and abstention under pressure.
+- standard inference
+- adversarial trust
+- adaptive mismatch
+- budget/noise stress
 
-### Held-out transfer
+### Held-out split
 
-Tasks that preserve the same cognitive demand while changing the surface domain or seed split.
+- held-out transfer with disjoint seeds across all three domains
 
-## Required metrics
+## Episode Result Schema
 
-- final accuracy
-- accuracy on commit
-- abstention rate
-- silent failure rate
-- false adaptation rate
+Every episode record includes:
+
+- domain
+- task name
+- task class
+- split
+- adapter variant
+- seed
+- budget
+- final status
+- accuracy
+- committed
+- abstained
+- silent failure
+- false adaptation
 - trust lock turn
 - contradiction trigger turn
 - adaptation trigger turn
-- post-adaptation recovery rate
 - planner trace availability
 - self-model snapshot availability
 - explanation trace availability
+- optional planner trace
+- optional self-model snapshot
+- optional explanation trace
+- metadata
 
-## Hard rules
+## Reporting Outputs
+
+The package report must emit:
+
+- one summary table
+- one per-domain table
+- one ablation table
+- one small set of trace examples
+- one blunt verdict on external legibility
+
+## Hard Rules
 
 - silent failure must be reported explicitly
 - abstention must remain distinct from wrong commit
-- held-out transfer must use an explicit split file
-- standard and anomaly results must be reported separately
-- runs must be reproducible by seed
-- benchmark logic must stay decoupled from any one adapter implementation
-
-## Ablation plan
-
-The benchmark package should expose the following ablation targets:
-
-- no planner
-- no self-model
-- no memory
-- no adaptation
-- no safety circuit
-
-Benchmark v1 implements the ablations that are already supported by clean runtime switches and reports unsupported ablations honestly rather than silently faking them.
+- baseline and anomaly cohorts must remain separated in reporting
+- held-out transfer must stay in an explicit split file
+- outputs must be reproducible by seed
+- default run artifacts must stay outside committed source paths
+- benchmark work must not modify DEIC core inference logic

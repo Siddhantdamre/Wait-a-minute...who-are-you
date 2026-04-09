@@ -28,6 +28,7 @@ class CyberDEICAdapter:
         use_controller=False,
         use_planner=False,
         memory=None,
+        enable_self_model=True,
         confidence_threshold=0.95,
         entropy_floor=0.10,
         coverage_threshold=0.85,
@@ -39,6 +40,7 @@ class CyberDEICAdapter:
         self.use_controller = use_controller
         self.use_planner = use_planner
         self.memory = memory
+        self.enable_self_model = enable_self_model
         self.confidence_threshold = confidence_threshold
         self.entropy_floor = entropy_floor
         self.coverage_threshold = coverage_threshold
@@ -77,6 +79,7 @@ class CyberDEICAdapter:
 
     def _diagnose_legacy(self, env, engine, budget):
         queried_pairs = set()
+        inspector = BeliefInspector(engine)
 
         # Phase A: Trust discovery (find the live monitor)
         while env.turn < budget - 1 and engine._trusted_source is None:
@@ -121,6 +124,7 @@ class CyberDEICAdapter:
         # Submit diagnosis
         proposed = engine.propose_state()
         diagnosis_result = env.submit_diagnosis(proposed)
+        diagnosis_result["final_workspace"] = inspector.workspace(memory=self.memory)
         return diagnosis_result
 
     def _diagnose_with_controller(self, env, engine, budget):
@@ -143,11 +147,11 @@ class CyberDEICAdapter:
             if decision in (CommitController.ACTION_COMMIT, CommitController.ACTION_STOP):
                 proposed = engine.propose_state()
                 res = env.submit_diagnosis(proposed)
-                res["final_workspace"] = inspector_state
+                res["final_workspace"] = inspector.workspace(memory=self.memory)
                 return res
             elif decision == CommitController.ACTION_ESCALATE:
                 res = env.escalate_ambiguity()
-                res["final_workspace"] = inspector_state
+                res["final_workspace"] = inspector.workspace(memory=self.memory)
                 return res
             
             elif decision == CommitController.ACTION_QUERY:
@@ -198,10 +202,11 @@ class CyberDEICAdapter:
         post_adaptation_escalation_turn = -1
         post_adaptation_wrong_commit = False
         post_adaptation_query_value_total = 0.0
+        decision_trace = []
 
         while True:
             remaining = budget - 1 - env.turn
-            ws = inspector.workspace()
+            ws = inspector.workspace(memory=self.memory)
             # Inject adaptation telemetry into workspace
             ws.adaptation_count = engine.adaptation_count
             ws.current_family_spec = str(engine._current_generator.family_spec()) if engine._current_generator and hasattr(engine._current_generator, 'family_spec') else ""
@@ -237,13 +242,22 @@ class CyberDEICAdapter:
                 if post_adaptation_queries > 0 else 0.0
             )
 
-            sm = SelfModel.from_workspace(ws)
+            sm = SelfModel.from_workspace(ws) if self.enable_self_model else None
             decision = planner.decide(ws, sm, max(0, remaining))
             mode = decision.mode.value
 
             if mode == "EARLY_COMMIT":
                 proposed = engine.propose_state()
                 res = env.submit_diagnosis(proposed)
+                decision_trace.append(
+                    {
+                        "planner_mode": mode,
+                        "rationale": decision.rationale,
+                        "recommendation": decision.recommendation,
+                        "remaining_budget": max(0, remaining),
+                        "action": {"type": "commit_diagnosis", "proposed_latency": proposed},
+                    }
+                )
                 if engine.adaptation_count > 0:
                     post_adaptation_commit_turn = env.turn
                     post_adaptation_wrong_commit = not res.get("correct", False)
@@ -252,22 +266,43 @@ class CyberDEICAdapter:
                 # Final analytical telemetry pass
                 self._enrich_telemetry(ws, res, env, engine)
                 res["final_workspace"] = ws
+                res["decision_trace"] = decision_trace
                 return res
 
             if mode == "ESCALATE":
                 ws.family_search_outcome = family_search_outcome or "escalated"
+                decision_trace.append(
+                    {
+                        "planner_mode": mode,
+                        "rationale": decision.rationale,
+                        "recommendation": decision.recommendation,
+                        "remaining_budget": max(0, remaining),
+                        "action": {"type": "escalate_ambiguity"},
+                    }
+                )
                 if engine.adaptation_count > 0:
                     post_adaptation_escalation_turn = env.turn
                     ws.post_adaptation_escalation_turn = post_adaptation_escalation_turn
                 res = {"escalated": True, "abstained": True}
                 self._enrich_telemetry(ws, res, env, engine)
                 res["final_workspace"] = ws
+                res["decision_trace"] = decision_trace
                 return res
 
             elif mode == "RESET_TRUST":
+                decision_trace.append(
+                    {
+                        "planner_mode": mode,
+                        "rationale": decision.rationale,
+                        "recommendation": decision.recommendation,
+                        "remaining_budget": max(0, remaining),
+                        "action": {"type": "reset_trust"},
+                    }
+                )
                 engine.reset_trust()
                 continue
             elif mode == "CONTRADICTION_PROBE":
+                trace_action = {"type": "query"}
                 if contradiction_probe_trigger_turn < 0:
                     contradiction_probe_trigger_turn = env.turn
                 contradiction_probe_count += 1
@@ -277,6 +312,16 @@ class CyberDEICAdapter:
                     monitor = engine._trusted_source
                 else:
                     monitor, service = engine.select_query({'remaining_turns': remaining, 'queried_pairs': queried_pairs})
+                trace_action.update({"monitor": monitor, "service": service})
+                decision_trace.append(
+                    {
+                        "planner_mode": mode,
+                        "rationale": decision.rationale,
+                        "recommendation": decision.recommendation,
+                        "remaining_budget": max(0, remaining),
+                        "action": trace_action,
+                    }
+                )
 
                 pre_query_entropy = ws.entropy
                 result = env.query(monitor, service)
@@ -299,14 +344,35 @@ class CyberDEICAdapter:
                     family_search_trigger = "precollapse_capacity_upward"
                 else:
                     family_search_trigger = "rule0_structural_contradiction"
+                trace_action = {"type": "adapt_structure", "trigger": family_search_trigger}
                 gen = engine._current_generator
                 if gen is None or not hasattr(gen, 'adjacent_families'):
                     family_search_outcome = "exhausted"
+                    trace_action["outcome"] = family_search_outcome
+                    decision_trace.append(
+                        {
+                            "planner_mode": mode,
+                            "rationale": decision.rationale,
+                            "recommendation": decision.recommendation,
+                            "remaining_budget": max(0, remaining),
+                            "action": trace_action,
+                        }
+                    )
                     continue
 
                 candidates = gen.adjacent_families()
                 if not candidates:
                     family_search_outcome = "exhausted"
+                    trace_action["outcome"] = family_search_outcome
+                    decision_trace.append(
+                        {
+                            "planner_mode": mode,
+                            "rationale": decision.rationale,
+                            "recommendation": decision.recommendation,
+                            "remaining_budget": max(0, remaining),
+                            "action": trace_action,
+                        }
+                    )
                     continue
 
                 # Save current state for rollback
@@ -358,6 +424,17 @@ class CyberDEICAdapter:
                     engine._hypotheses, engine._queried_values, engine._current_generator = saved_hypotheses, saved_queried, saved_generator
                     engine.adaptation_count = saved_adaptation_count + 1
                     family_search_outcome = family_search_outcome or "rejected"
+                trace_action["outcome"] = family_search_outcome
+                trace_action["candidates"] = list(candidate_specs_tested)
+                decision_trace.append(
+                    {
+                        "planner_mode": mode,
+                        "rationale": decision.rationale,
+                        "recommendation": decision.recommendation,
+                        "remaining_budget": max(0, remaining),
+                        "action": trace_action,
+                    }
+                )
                 continue
 
             elif mode in ("EXPLORE", "REFINE", "ADAPT_REFINE"):
@@ -375,6 +452,15 @@ class CyberDEICAdapter:
                         monitor, service = engine.select_query({'remaining_turns': remaining, 'queried_pairs': queried_pairs})
                 else: 
                     monitor, service = engine.select_query({'remaining_turns': remaining, 'queried_pairs': queried_pairs})
+                decision_trace.append(
+                    {
+                        "planner_mode": mode,
+                        "rationale": decision.rationale,
+                        "recommendation": decision.recommendation,
+                        "remaining_budget": max(0, remaining),
+                        "action": {"type": "query", "monitor": monitor, "service": service},
+                    }
+                )
 
                 pre_query_entropy = ws.entropy
                 result = env.query(monitor, service)

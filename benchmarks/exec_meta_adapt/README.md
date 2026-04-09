@@ -1,26 +1,46 @@
 # DEIC-CogBench v1
 
-DEIC-CogBench v1 is the first benchmark packaging layer for the current DEIC platform.
-
-It evaluates a bounded cognitive subsystem across:
+DEIC-CogBench v1 packages the frozen DEIC Platform v1 as a runnable benchmark for:
 
 - executive function
 - metacognition
 - adaptive learning under partial observability
 - safety-aware abstention
 
-The suite is built around the frozen DEIC Platform v1 baseline defined in [docs/milestones/deic_platform_v1.md](../../docs/milestones/deic_platform_v1.md).
+This is a bounded cognitive benchmark package, not a claim of AGI.
 
-## Layout
+## Code Structure Summary
 
-- `spec.md`: benchmark goals, task classes, hard rules, and baseline config
-- `tasks/`: runnable task wrappers for C6, cyber, and clinical domains
-- `splits/`: explicit train and held-out split definitions
-- `schemas.py`: unified per-episode and aggregate result schemas
-- `scoring.py`: normalization, aggregation, and report rendering
-- `run_suite.py`: one-command benchmark runner
-- `run_ablations.py`: benchmark ablation runner
-- `results/`: JSON outputs from suite runs
+- `spec.md`: benchmark contract, baseline config, task families, reporting rules
+- `splits/train_split.yaml`: canonical train split for baseline, trust, anomaly, and budget/noise coverage
+- `splits/heldout_split.yaml`: explicit held-out transfer split
+- `tasks/`: thin wrappers over the frozen benchmark, cyber, and clinical environments
+- `schemas.py`: frozen task, split, episode, and aggregate schemas
+- `scoring.py`: deterministic aggregation, reporting, trace selection, and serialization
+- `run_suite.py`: full package runner that emits the combined report and JSON artifact
+- `run_ablations.py`: ablation-only runner over the frozen contract
+
+## CLI Contract
+
+`run_suite.py` is the main package command. By default it:
+
+- runs both the train and held-out splits
+- includes traces
+- includes ablations
+- writes outputs to `results/deic_cogbench/`
+
+Key arguments:
+
+- `--train-split`
+- `--heldout-split`
+- `--output-dir`
+- `--max-tasks`
+- `--max-episodes`
+- `--trace-limit`
+- `--no-traces`
+- `--skip-ablations`
+
+`run_ablations.py` runs the ablation surface directly and writes `ablations_train.json` into the same output directory.
 
 ## Run
 
@@ -28,8 +48,14 @@ The suite is built around the frozen DEIC Platform v1 baseline defined in [docs/
 python benchmarks/exec_meta_adapt/run_suite.py
 ```
 
-For a small smoke run:
+Small smoke run:
 
 ```bash
-python benchmarks/exec_meta_adapt/run_suite.py --max-tasks 2 --max-episodes 5
+python benchmarks/exec_meta_adapt/run_suite.py --max-tasks 2 --max-episodes 2
+```
+
+Ablations only:
+
+```bash
+python benchmarks/exec_meta_adapt/run_ablations.py --max-tasks 2 --max-episodes 2
 ```
