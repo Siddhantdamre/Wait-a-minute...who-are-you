@@ -182,6 +182,7 @@ class ClinicalDEICAdapter:
         family_search_trigger = ""
         family_search_outcome = ""
         candidate_specs_tested = []
+        trust_lock_turn = -1
         adaptation_turn = -1
         remaining_budget_at_adaptation = -1
         adaptation_before_full_coverage = False
@@ -207,6 +208,9 @@ class ClinicalDEICAdapter:
             ws.candidate_specs_tested = candidate_specs_tested
             ws.family_search_trigger = family_search_trigger
             ws.family_search_outcome = family_search_outcome
+            if trust_lock_turn < 0 and ws.trusted_source_locked:
+                trust_lock_turn = env.turn
+            ws.trust_lock_turn = trust_lock_turn
             ws.adaptation_turn = adaptation_turn
             ws.remaining_budget_at_adaptation = remaining_budget_at_adaptation
             ws.adaptation_before_full_coverage = adaptation_before_full_coverage

@@ -1,0 +1,77 @@
+{
+  "suite_name": "DEIC-CogBench v1",
+  "split": "train",
+  "notes": "JSON-compatible YAML so the suite can load it with the Python standard library.",
+  "tasks": [
+    {
+      "task": "c6_standard",
+      "domain": "benchmark",
+      "task_class": "standard_inference",
+      "split": "train",
+      "n_episodes": 50,
+      "budget": 8,
+      "seed_offset": 700000,
+      "adapter_variant": "frozen_full",
+      "condition": "c6_hidden_structure",
+      "notes": "Frozen C6 baseline."
+    },
+    {
+      "task": "c6_standard",
+      "domain": "benchmark",
+      "task_class": "adversarial_trust",
+      "split": "train",
+      "n_episodes": 50,
+      "budget": 12,
+      "seed_offset": 720000,
+      "adapter_variant": "frozen_full",
+      "condition": "active_deception",
+      "notes": "Byzantine trust stress case."
+    },
+    {
+      "task": "cyber_standard",
+      "domain": "cyber",
+      "task_class": "heldout_transfer",
+      "split": "train",
+      "n_episodes": 50,
+      "budget": 8,
+      "seed_offset": 100000,
+      "adapter_variant": "frozen_full",
+      "notes": "Isomorphic transfer baseline."
+    },
+    {
+      "task": "cyber_anomaly",
+      "domain": "cyber",
+      "task_class": "adaptive_mismatch",
+      "split": "train",
+      "n_episodes": 50,
+      "budget": 8,
+      "seed_offset": 7000,
+      "adapter_variant": "frozen_full",
+      "group_size": 5,
+      "notes": "Overflow mismatch."
+    },
+    {
+      "task": "clinical_standard",
+      "domain": "clinical",
+      "task_class": "heldout_transfer",
+      "split": "train",
+      "n_episodes": 50,
+      "budget": 8,
+      "seed_offset": 500000,
+      "adapter_variant": "frozen_full",
+      "notes": "Variable-group transfer baseline."
+    },
+    {
+      "task": "clinical_anomaly",
+      "domain": "clinical",
+      "task_class": "adaptive_mismatch",
+      "split": "train",
+      "n_episodes": 50,
+      "budget": 8,
+      "seed_offset": 91000,
+      "adapter_variant": "frozen_full",
+      "group_size": 5,
+      "notes": "Fixed-family mismatch."
+    }
+  ]
+}

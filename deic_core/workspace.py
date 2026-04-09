@@ -35,6 +35,7 @@ class CognitiveState:
     top_hypotheses: List[Tuple[dict, float]] = field(default_factory=list)
     trust_distribution: Dict[str, float] = field(default_factory=dict)
     trusted_source_locked: bool = False
+    trust_lock_turn: int = -1
     active_hypotheses_count: int = 0
     trust_evidence: dict = field(default_factory=dict)
     suspicion_scores: dict = field(default_factory=dict)

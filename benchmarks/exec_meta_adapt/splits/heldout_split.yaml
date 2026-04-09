@@ -1,0 +1,77 @@
+{
+  "suite_name": "DEIC-CogBench v1",
+  "split": "heldout",
+  "notes": "Held-out seeds and harder budgets for transfer and starvation checks.",
+  "tasks": [
+    {
+      "task": "c6_standard",
+      "domain": "benchmark",
+      "task_class": "budget_starvation",
+      "split": "heldout",
+      "n_episodes": 50,
+      "budget": 6,
+      "seed_offset": 900000,
+      "adapter_variant": "frozen_full",
+      "condition": "c6_hidden_structure",
+      "notes": "Budget-starved hidden-structure slice."
+    },
+    {
+      "task": "c6_standard",
+      "domain": "benchmark",
+      "task_class": "adversarial_trust",
+      "split": "heldout",
+      "n_episodes": 50,
+      "budget": 12,
+      "seed_offset": 930000,
+      "adapter_variant": "frozen_full",
+      "condition": "stale_state",
+      "notes": "Held-out stale-state trust condition."
+    },
+    {
+      "task": "cyber_standard",
+      "domain": "cyber",
+      "task_class": "heldout_transfer",
+      "split": "heldout",
+      "n_episodes": 50,
+      "budget": 12,
+      "seed_offset": 300000,
+      "adapter_variant": "frozen_full",
+      "notes": "Held-out cyber seeds."
+    },
+    {
+      "task": "cyber_anomaly",
+      "domain": "cyber",
+      "task_class": "adaptive_mismatch",
+      "split": "heldout",
+      "n_episodes": 50,
+      "budget": 8,
+      "seed_offset": 8000,
+      "adapter_variant": "frozen_full",
+      "group_size": 3,
+      "notes": "Underflow mismatch."
+    },
+    {
+      "task": "clinical_standard",
+      "domain": "clinical",
+      "task_class": "heldout_transfer",
+      "split": "heldout",
+      "n_episodes": 50,
+      "budget": 12,
+      "seed_offset": 700000,
+      "adapter_variant": "frozen_full",
+      "notes": "Held-out clinical seeds."
+    },
+    {
+      "task": "clinical_anomaly",
+      "domain": "clinical",
+      "task_class": "adaptive_mismatch",
+      "split": "heldout",
+      "n_episodes": 50,
+      "budget": 8,
+      "seed_offset": 81000,
+      "adapter_variant": "frozen_full",
+      "group_size": 3,
+      "notes": "Held-out fixed-family underflow mismatch."
+    }
+  ]
+}

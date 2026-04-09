@@ -97,6 +97,17 @@ Why this line is closed:
 - It is not a general early-contradiction solution.
 - Further trigger micro-tuning is less justified than moving to the next architectural bottleneck.
 
+### Benchmark Packaging Next
+
+The next phase is to package the current DEIC stack as a benchmark-grade evaluation baseline rather than extend the trigger-tuning line.
+
+See [docs/DEIC_BENCHMARK_PACKAGE.md](docs/DEIC_BENCHMARK_PACKAGE.md) for the current repo boundary:
+- what is finished
+- what is frozen
+- what becomes the benchmark package next
+
+The concrete baseline freeze for that work now lives in [docs/milestones/deic_platform_v1.md](docs/milestones/deic_platform_v1.md), and the first benchmark scaffold lives in [benchmarks/exec_meta_adapt/README.md](benchmarks/exec_meta_adapt/README.md).
+
 ---
 
 ## Architecture

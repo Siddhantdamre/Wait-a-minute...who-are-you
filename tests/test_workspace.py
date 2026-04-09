@@ -148,6 +148,7 @@ def test_workspace_item_counts():
     ws = inspector.workspace()
     assert ws.items_total == 3
     assert ws.items_queried == 0
+    assert ws.trust_lock_turn == -1
     assert ws.current_family_capacity == 2
     assert ws.trusted_shifted_count_lower_bound == 0
 

@@ -38,6 +38,9 @@ backup_*/
 # Logs
 *.log
 
+# Benchmark run artifacts
+benchmarks/exec_meta_adapt/results/*.json
+
 # Large data files (>100MB, GitHub limit)
 *.csv
 data/

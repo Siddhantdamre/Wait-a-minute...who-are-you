@@ -106,6 +106,27 @@ This document serves as the official historical ledger tracking the structural e
 
 ---
 
+## MILESTONE 11: Benchmark Packaging Definition
+**Status**: `DEFINED` | **Code**: `docs/DEIC_BENCHMARK_PACKAGE.md`
+
+*   **Boundary Clarified:** The repository now has an explicit statement of what is finished, what is frozen, and what comes next.
+*   **Benchmark Direction:** The next deliverable is not another architecture rewrite. It is a benchmark-grade evaluation package built around executive function, metacognition, adaptive learning under partial observability, and safety-aware abstention.
+*   **System Role:** The current DEIC stack becomes the main bounded cognitive system under test, the main reproducible baseline, and the source of controlled ablations.
+*   **Frozen Core:** Core inference math, the benchmark ladder, safety semantics, regression guards, and ADAPT_REFINE remain protected unless a clear bug is found.
+*   **Next Work Unit:** Package standard tasks, adversarial trust tasks, bounded adaptation tasks, held-out transfer tasks, and ablations into a coherent evaluation suite other researchers can inspect and reuse.
+
+---
+
+## MILESTONE 12: DEIC-CogBench v1 Scaffold
+**Status**: `IN_PROGRESS` | **Code**: `docs/milestones/deic_platform_v1.md`, `benchmarks/exec_meta_adapt/`
+
+*   **Milestone 0 Freeze:** Added an explicit DEIC Platform v1 freeze document so benchmark work has a stable baseline instead of drifting across phase-specific settings.
+*   **Benchmark Skeleton:** Added the first DEIC-CogBench v1 package structure with task wrappers, split definitions, unified episode schema, scoring utilities, a one-command suite runner, and an ablation runner.
+*   **Metric Intent:** The scaffold promotes benchmark-facing metrics such as abstention, silent failure, false adaptation, trust lock timing, contradiction timing, and post-adaptation recovery into first-class outputs.
+*   **Current Scope:** This is the packaging layer, not a new cognition result. It makes the frozen system externally legible and reproducible so later dynamic-structure and interactive-adaptation work can land on top of it cleanly.
+
+---
+
 ## 📂 PARALLEL DEPLOYMENTS (Ancillary Projects)
 
 1. **Smart Cultural Storyteller (Hybrid Failover RAG)** 
