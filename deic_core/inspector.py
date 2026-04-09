@@ -110,6 +110,8 @@ class BeliefInspector:
         from .workspace import CognitiveState
 
         inspector_data = self.inspect(top_n=top_n)
+        current_capacity = self._current_family_capacity()
+        trusted_shifted_lb = self._trusted_shifted_count_lower_bound()
 
         return CognitiveState(
             entropy=inspector_data['entropy'],
@@ -130,6 +132,8 @@ class BeliefInspector:
                 and hasattr(self.engine._current_generator, 'family_spec')
                 else ""
             ),
+            trusted_shifted_count_lower_bound=trusted_shifted_lb,
+            current_family_capacity=current_capacity,
             query_rationale=inspector_data['query_rationale'],
             all_hypotheses=self.engine.score_hypotheses(),
             items_queried=len(self.engine._queried_values),
@@ -152,4 +156,26 @@ class BeliefInspector:
         if inspector_data['confidence_margin'] < 0.80:
             return "Increase confidence margin"
         return "Ready to commit"
+
+    def _current_family_capacity(self):
+        """Return the active fixed-family capacity, or 0 if not applicable."""
+        generator = self.engine._current_generator
+        if generator is None or not hasattr(generator, "family_spec"):
+            return 0
+        spec = generator.family_spec()
+        if spec is None or not hasattr(spec, "group_size"):
+            return 0
+        return spec.group_size
+
+    def _trusted_shifted_count_lower_bound(self):
+        """Count uniquely shifted items confirmed by the trusted source."""
+        trusted = self.engine._trusted_source
+        if trusted is None:
+            return 0
+        shifted_items = {
+            item
+            for item, value in self.engine._source_observations.get(trusted, [])
+            if value != self.engine._initial_values.get(item)
+        }
+        return len(shifted_items)
 

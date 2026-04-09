@@ -7,6 +7,7 @@ from .self_model import SelfModel
 class PlannerMode(enum.Enum):
     EXPLORE = "EXPLORE"           # Discovery of trust / broad latent space
     REFINE = "REFINE"             # Reducing entropy in a trusted subspace
+    CONTRADICTION_PROBE = "CONTRADICTION_PROBE" # One forced untouched probe before risky commit
     ADAPT_REFINE = "ADAPT_REFINE" # Focused refinement after adopting a new family
     EARLY_COMMIT = "EARLY_COMMIT" # Threshold met, stopping early
     ESCALATE = "ESCALATE"         # Budget low, ambiguity high, must abstain
@@ -33,6 +34,8 @@ class MinimalPlanner:
         coverage_threshold: float = 0.85,
         enable_adapt_refine: bool = False,
         min_post_adaptation_queries: int = 1,
+        enable_upward_capacity_trigger: bool = False,
+        enable_final_contradiction_probe: bool = True,
     ):
         self.confidence_threshold = confidence_threshold
         self.entropy_floor = entropy_floor
@@ -40,6 +43,54 @@ class MinimalPlanner:
         self.coverage_threshold = coverage_threshold
         self.enable_adapt_refine = enable_adapt_refine
         self.min_post_adaptation_queries = min_post_adaptation_queries
+        self.enable_upward_capacity_trigger = enable_upward_capacity_trigger
+        self.enable_final_contradiction_probe = enable_final_contradiction_probe
+
+    def upward_capacity_trigger_ready(
+        self,
+        ws: CognitiveState,
+        active_hypotheses: Optional[int] = None,
+    ) -> bool:
+        """Return True when trusted evidence has outgrown current capacity."""
+        if not self.enable_upward_capacity_trigger:
+            return False
+        if active_hypotheses is None:
+            active_hypotheses = ws.get("active_hypotheses_count", 0)
+        current_capacity = ws.get("current_family_capacity", 0)
+        shifted_lb = ws.get("trusted_shifted_count_lower_bound", 0)
+        direction = ws.get("capacity_trigger_direction", "")
+        return (
+            ws.trusted_source_locked
+            and active_hypotheses > 0
+            and current_capacity >= 1
+            and shifted_lb > current_capacity
+            and direction == "UPWARD"
+        )
+
+    def final_contradiction_probe_ready(
+        self,
+        ws: CognitiveState,
+        remaining_budget: int,
+        active_hypotheses: Optional[int] = None,
+    ) -> bool:
+        """Return True when one final untouched probe is worth spending safely."""
+        if not self.enable_final_contradiction_probe:
+            return False
+        if active_hypotheses is None:
+            active_hypotheses = ws.get("active_hypotheses_count", 0)
+        current_capacity = ws.get("current_family_capacity", 0)
+        shifted_lb = ws.get("trusted_shifted_count_lower_bound", 0)
+        contradiction_probe_count = ws.get("contradiction_probe_count", 0)
+        return (
+            ws.trusted_source_locked
+            and ws.get("adaptation_count", 0) == 0
+            and active_hypotheses > 0
+            and current_capacity >= 1
+            and shifted_lb == current_capacity
+            and ws.get("items_queried", 0) < ws.get("items_total", 0)
+            and remaining_budget in (1, 2)
+            and contradiction_probe_count == 0
+        )
 
     def decide(
         self,
@@ -105,6 +156,31 @@ class MinimalPlanner:
                     rationale=f"Suspicious source + low budget. Cannot safely resolve.",
                     recommendation="Abstain to prevent capture."
                 )
+
+        # —— R1b: Trusted evidence exceeds current family capacity -> upward adapt ——
+        if adaptation_count < self.max_adaptations and self.upward_capacity_trigger_ready(ws, active_hyps):
+            current_capacity = ws.get("current_family_capacity", 0)
+            shifted_lb = ws.get("trusted_shifted_count_lower_bound", 0)
+            return PlannerDecision(
+                mode=PlannerMode.ADAPT_STRUCTURE,
+                rationale=(
+                    f"Trusted shifted-count lower bound {shifted_lb} exceeds "
+                    f"current family capacity {current_capacity}."
+                ),
+                recommendation="Replay the next larger adjacent family against trusted evidence."
+            )
+
+        # —— R1c: Saturated family + untouched items -> force one final probe ——
+        if self.final_contradiction_probe_ready(ws, remaining_budget, active_hyps):
+            current_capacity = ws.get("current_family_capacity", 0)
+            return PlannerDecision(
+                mode=PlannerMode.CONTRADICTION_PROBE,
+                rationale=(
+                    f"Trusted evidence already saturates family capacity {current_capacity} "
+                    f"with untouched items remaining."
+                ),
+                recommendation="Spend one final trusted query on the least-covered untouched item."
+            )
 
         # ── R2: Budget gone + high uncertainty → ESCALATE ──────────
         if remaining_budget <= 0 and margin < self.confidence_threshold:

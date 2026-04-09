@@ -114,26 +114,50 @@ def main():
 
     configs = {
         "before": {
-            "cyber": CyberDEICAdapter(use_planner=True, confidence_threshold=0.999, coverage_threshold=1.0, enable_adapt_refine=False),
+            "cyber": CyberDEICAdapter(
+                use_planner=True,
+                confidence_threshold=0.999,
+                coverage_threshold=1.0,
+                enable_adapt_refine=False,
+                enable_final_contradiction_probe=False,
+            ),
             "clinical": ClinicalDEICAdapter(
                 use_planner=True,
                 confidence_threshold=0.999,
                 coverage_threshold=1.0,
                 enable_adapt_refine=False,
+                enable_final_contradiction_probe=False,
                 hypothesis_generator=FixedPartitionGenerator(group_size=4, multipliers=[1.3, 1.8, 2.5]),
             ),
-            "benchmark": DEICBenchmarkAdapter(use_planner=True, confidence_threshold=0.999, enable_adapt_refine=False),
+            "benchmark": DEICBenchmarkAdapter(
+                use_planner=True,
+                confidence_threshold=0.999,
+                enable_adapt_refine=False,
+                enable_final_contradiction_probe=False,
+            ),
         },
         "after": {
-            "cyber": CyberDEICAdapter(use_planner=True, confidence_threshold=0.999, coverage_threshold=1.0, enable_adapt_refine=True),
+            "cyber": CyberDEICAdapter(
+                use_planner=True,
+                confidence_threshold=0.999,
+                coverage_threshold=1.0,
+                enable_adapt_refine=True,
+                enable_final_contradiction_probe=False,
+            ),
             "clinical": ClinicalDEICAdapter(
                 use_planner=True,
                 confidence_threshold=0.999,
                 coverage_threshold=1.0,
                 enable_adapt_refine=True,
+                enable_final_contradiction_probe=False,
                 hypothesis_generator=FixedPartitionGenerator(group_size=4, multipliers=[1.3, 1.8, 2.5]),
             ),
-            "benchmark": DEICBenchmarkAdapter(use_planner=True, confidence_threshold=0.999, enable_adapt_refine=True),
+            "benchmark": DEICBenchmarkAdapter(
+                use_planner=True,
+                confidence_threshold=0.999,
+                enable_adapt_refine=True,
+                enable_final_contradiction_probe=False,
+            ),
         },
     }
 

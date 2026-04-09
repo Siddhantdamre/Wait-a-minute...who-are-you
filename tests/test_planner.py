@@ -206,3 +206,94 @@ def test_adapt_refine_commits_after_validation_query():
     planner = MinimalPlanner(enable_adapt_refine=True, coverage_threshold=1.0)
     d = planner.decide(ws, sm, remaining_budget=3)
     assert d.mode == PlannerMode.EARLY_COMMIT
+
+
+def test_upward_capacity_trigger_adapts_before_collapse():
+    ws = _make_ws(
+        trusted_source_locked=True,
+        active_hypotheses_count=3,
+        current_family_capacity=4,
+        trusted_shifted_count_lower_bound=5,
+        capacity_trigger_direction="UPWARD",
+    )
+    sm = _make_sm(ws)
+    planner = MinimalPlanner(enable_upward_capacity_trigger=True)
+    d = planner.decide(ws, sm, remaining_budget=3)
+    assert d.mode == PlannerMode.ADAPT_STRUCTURE
+    assert "capacity" in d.rationale.lower()
+
+
+def test_upward_capacity_trigger_requires_locked_trust():
+    ws = _make_ws(
+        trusted_source_locked=False,
+        active_hypotheses_count=3,
+        current_family_capacity=4,
+        trusted_shifted_count_lower_bound=5,
+        capacity_trigger_direction="UPWARD",
+    )
+    sm = _make_sm(ws)
+    planner = MinimalPlanner(enable_upward_capacity_trigger=True)
+    d = planner.decide(ws, sm, remaining_budget=3)
+    assert d.mode == PlannerMode.EXPLORE
+
+
+def test_upward_capacity_trigger_requires_strict_exceedance():
+    ws = _make_ws(
+        trusted_source_locked=True,
+        active_hypotheses_count=3,
+        current_family_capacity=4,
+        trusted_shifted_count_lower_bound=4,
+        capacity_trigger_direction="UPWARD",
+    )
+    sm = _make_sm(ws)
+    planner = MinimalPlanner(enable_upward_capacity_trigger=True)
+    d = planner.decide(ws, sm, remaining_budget=3)
+    assert d.mode == PlannerMode.REFINE
+
+
+def test_final_contradiction_probe_triggers_on_saturated_capacity_risk():
+    ws = _make_ws(
+        trusted_source_locked=True,
+        active_hypotheses_count=2,
+        current_family_capacity=4,
+        trusted_shifted_count_lower_bound=4,
+        items_queried=6,
+        items_total=8,
+        contradiction_probe_count=0,
+    )
+    sm = _make_sm(ws)
+    planner = MinimalPlanner()
+    d = planner.decide(ws, sm, remaining_budget=2)
+    assert d.mode == PlannerMode.CONTRADICTION_PROBE
+
+
+def test_final_contradiction_probe_requires_saturated_not_exceeded_capacity():
+    ws = _make_ws(
+        trusted_source_locked=True,
+        active_hypotheses_count=2,
+        current_family_capacity=4,
+        trusted_shifted_count_lower_bound=3,
+        items_queried=6,
+        items_total=8,
+        contradiction_probe_count=0,
+    )
+    sm = _make_sm(ws)
+    planner = MinimalPlanner(enable_final_contradiction_probe=True)
+    d = planner.decide(ws, sm, remaining_budget=2)
+    assert d.mode == PlannerMode.REFINE
+
+
+def test_final_contradiction_probe_only_fires_once():
+    ws = _make_ws(
+        trusted_source_locked=True,
+        active_hypotheses_count=2,
+        current_family_capacity=4,
+        trusted_shifted_count_lower_bound=4,
+        items_queried=6,
+        items_total=8,
+        contradiction_probe_count=1,
+    )
+    sm = _make_sm(ws)
+    planner = MinimalPlanner(enable_final_contradiction_probe=True)
+    d = planner.decide(ws, sm, remaining_budget=2)
+    assert d.mode == PlannerMode.REFINE

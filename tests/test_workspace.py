@@ -148,11 +148,19 @@ def test_workspace_item_counts():
     ws = inspector.workspace()
     assert ws.items_total == 3
     assert ws.items_queried == 0
+    assert ws.current_family_capacity == 2
+    assert ws.trusted_shifted_count_lower_bound == 0
 
     # Query one item
     engine.update_observation('s1', 'i1', 15, t=0)
     ws2 = inspector.workspace()
     assert ws2.items_queried == 1
+    assert ws2.trusted_shifted_count_lower_bound == 1
+
+    # Query a second shifted item from the trusted source.
+    engine.update_observation('s1', 'i2', 30, t=1)
+    ws3 = inspector.workspace()
+    assert ws3.trusted_shifted_count_lower_bound == 2
 
 
 def test_workspace_to_dict():

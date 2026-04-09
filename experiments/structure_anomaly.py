@@ -117,8 +117,18 @@ if __name__ == "__main__":
     N = 100 # Keep N=100 for final A/B check
     
     # Configure two adapters for A/B testing
-    adapter_v85 = CyberDEICAdapter(use_planner=True, confidence_threshold=0.999, coverage_threshold=0.85)
-    adapter_v100 = CyberDEICAdapter(use_planner=True, confidence_threshold=0.999, coverage_threshold=1.0)
+    adapter_v85 = CyberDEICAdapter(
+        use_planner=True,
+        confidence_threshold=0.999,
+        coverage_threshold=0.85,
+        enable_final_contradiction_probe=False,
+    )
+    adapter_v100 = CyberDEICAdapter(
+        use_planner=True,
+        confidence_threshold=0.999,
+        coverage_threshold=1.0,
+        enable_final_contradiction_probe=False,
+    )
 
     print("=" * 60)
     print("PHASE 15 — ADAPTATION RECOVERY A/B TEST (85% vs 100% COVERAGE)")

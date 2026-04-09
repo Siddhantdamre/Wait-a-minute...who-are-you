@@ -32,6 +32,8 @@ class CyberDEICAdapter:
         entropy_floor=0.10,
         coverage_threshold=0.85,
         enable_adapt_refine=True,
+        enable_upward_capacity_trigger=False,
+        enable_final_contradiction_probe=True,
     ):
         self.adaptive_trust = adaptive_trust
         self.use_controller = use_controller
@@ -41,6 +43,8 @@ class CyberDEICAdapter:
         self.entropy_floor = entropy_floor
         self.coverage_threshold = coverage_threshold
         self.enable_adapt_refine = enable_adapt_refine
+        self.enable_upward_capacity_trigger = enable_upward_capacity_trigger
+        self.enable_final_contradiction_probe = enable_final_contradiction_probe
 
     @staticmethod
     def _is_better_fit(candidate, current_best):
@@ -171,6 +175,8 @@ class CyberDEICAdapter:
             entropy_floor=self.entropy_floor,
             coverage_threshold=self.coverage_threshold,
             enable_adapt_refine=self.enable_adapt_refine,
+            enable_upward_capacity_trigger=self.enable_upward_capacity_trigger,
+            enable_final_contradiction_probe=self.enable_final_contradiction_probe,
         )
         item_queries = {it: set() for it in engine._items}
         monitors = env.get_monitors()
@@ -182,6 +188,10 @@ class CyberDEICAdapter:
         adaptation_turn = -1
         remaining_budget_at_adaptation = -1
         adaptation_before_full_coverage = False
+        precollapse_capacity_trigger_turn = -1
+        capacity_trigger_direction = ""
+        contradiction_probe_trigger_turn = -1
+        contradiction_probe_count = 0
         post_adaptation_queries = 0
         post_adaptation_commit_turn = -1
         post_adaptation_escalation_turn = -1
@@ -200,6 +210,20 @@ class CyberDEICAdapter:
             ws.adaptation_turn = adaptation_turn
             ws.remaining_budget_at_adaptation = remaining_budget_at_adaptation
             ws.adaptation_before_full_coverage = adaptation_before_full_coverage
+            if (
+                precollapse_capacity_trigger_turn < 0
+                and self.enable_upward_capacity_trigger
+                and ws.trusted_source_locked
+                and ws.active_hypotheses_count > 0
+                and ws.current_family_capacity >= 1
+                and ws.trusted_shifted_count_lower_bound > ws.current_family_capacity
+            ):
+                precollapse_capacity_trigger_turn = env.turn
+                capacity_trigger_direction = "UPWARD"
+            ws.precollapse_capacity_trigger_turn = precollapse_capacity_trigger_turn
+            ws.capacity_trigger_direction = capacity_trigger_direction
+            ws.contradiction_probe_trigger_turn = contradiction_probe_trigger_turn
+            ws.contradiction_probe_count = contradiction_probe_count
             ws.post_adaptation_queries = post_adaptation_queries
             ws.post_adaptation_commit_turn = post_adaptation_commit_turn
             ws.post_adaptation_escalation_turn = post_adaptation_escalation_turn
@@ -239,9 +263,38 @@ class CyberDEICAdapter:
             elif mode == "RESET_TRUST":
                 engine.reset_trust()
                 continue
+            elif mode == "CONTRADICTION_PROBE":
+                if contradiction_probe_trigger_turn < 0:
+                    contradiction_probe_trigger_turn = env.turn
+                contradiction_probe_count += 1
+                untouched = [it for it in engine._items if it not in engine._queried_values]
+                if untouched and engine._trusted_source is not None:
+                    service = min(untouched, key=lambda it: (len(item_queries.get(it, set())), engine._items.index(it)))
+                    monitor = engine._trusted_source
+                else:
+                    monitor, service = engine.select_query({'remaining_turns': remaining, 'queried_pairs': queried_pairs})
+
+                pre_query_entropy = ws.entropy
+                result = env.query(monitor, service)
+                queried_pairs.add((monitor, service))
+                item_queries[service].add(monitor)
+
+                if "reported_latency" in result:
+                    engine.update_observation(monitor, service, result["reported_latency"], env.turn)
+                    if engine._trusted_source is None and not self.adaptive_trust:
+                        engine.update_trust()
+                    if engine.adaptation_count > 0:
+                        post_state = inspector.inspect(top_n=1)
+                        post_adaptation_query_value_total += max(
+                            0.0, pre_query_entropy - post_state["entropy"]
+                        )
+                continue
 
             elif mode == "ADAPT_STRUCTURE":
-                family_search_trigger = "rule0_structural_contradiction"
+                if planner.upward_capacity_trigger_ready(ws):
+                    family_search_trigger = "precollapse_capacity_upward"
+                else:
+                    family_search_trigger = "rule0_structural_contradiction"
                 gen = engine._current_generator
                 if gen is None or not hasattr(gen, 'adjacent_families'):
                     family_search_outcome = "exhausted"
@@ -262,12 +315,26 @@ class CyberDEICAdapter:
                 best_result, best_spec = None, None
                 from deic_core.hypothesis import HypothesisGenerator
 
-                for spec in candidates:
-                    candidate_specs_tested.append(str(spec))
-                    replay_result = engine.reinitialize_beliefs(HypothesisGenerator.from_spec(spec))
-                    if replay_result['active_hypotheses'] > 0:
-                        if best_result is None or self._is_better_fit(replay_result, best_result):
-                            best_result, best_spec = replay_result, spec
+                if family_search_trigger == "precollapse_capacity_upward":
+                    upward_candidates = [
+                        spec for spec in candidates
+                        if getattr(spec, "group_size", 0) > ws.current_family_capacity
+                    ]
+                    if upward_candidates:
+                        best_spec = min(upward_candidates, key=lambda spec: spec.group_size)
+                        candidate_specs_tested.append(str(best_spec))
+                        best_result = engine.reinitialize_beliefs(HypothesisGenerator.from_spec(best_spec))
+                        if best_result['active_hypotheses'] <= 0:
+                            best_spec = None
+                    else:
+                        family_search_outcome = "exhausted"
+                else:
+                    for spec in candidates:
+                        candidate_specs_tested.append(str(spec))
+                        replay_result = engine.reinitialize_beliefs(HypothesisGenerator.from_spec(spec))
+                        if replay_result['active_hypotheses'] > 0:
+                            if best_result is None or self._is_better_fit(replay_result, best_result):
+                                best_result, best_spec = replay_result, spec
 
                 if best_spec is not None:
                     engine.reinitialize_beliefs(HypothesisGenerator.from_spec(best_spec))
@@ -286,7 +353,7 @@ class CyberDEICAdapter:
                 else:
                     engine._hypotheses, engine._queried_values, engine._current_generator = saved_hypotheses, saved_queried, saved_generator
                     engine.adaptation_count = saved_adaptation_count + 1
-                    family_search_outcome = "rejected"
+                    family_search_outcome = family_search_outcome or "rejected"
                 continue
 
             elif mode in ("EXPLORE", "REFINE", "ADAPT_REFINE"):

@@ -95,6 +95,17 @@ This document serves as the official historical ledger tracking the structural e
 
 ---
 
+## MILESTONE 10: Bounded Trigger-Tuning Closeout
+**Status**: `COMPLETED` | **Code**: `deic_core/planner.py`, `benchmark/deic_adapter.py`, `experiments/cyber_transfer/adapter.py`, `experiments/clinical_transfer/adapter.py`, `docs/logs/phase_16d_budget8_contradiction_probe_validation.md`
+
+*   **Merged Default Improvement:** Promoted the one-shot contradiction probe into the default adaptive planner path for generator-backed fixed-family domains. This keeps the existing replay-validated adaptation path intact and adds one final trusted probe before a risky low-budget commit.
+*   **Bounded Win:** Budget-8 overflow anomaly recovery improved from `0.00 -> 0.12` on both cyber and clinical `gs=5` mismatch harnesses. Budget-12 overflow recovery also improved from `0.69 -> 0.86` and `0.68 -> 0.86`.
+*   **Safety Held:** Silent failure stayed at `0`. False adaptation stayed at `0` on the validated cyber `gs=4` and planner-integrated C6 baselines. Standard baseline outcome metrics stayed intact.
+*   **Negative Result Preserved:** `gs=3` underflow anomalies did not improve, and the Phase 16c upward-capacity trigger remained safe but inert, so it stays out of the default path.
+*   **Line Closed:** This is a small but real bounded win, not a breakthrough or a general early-contradiction solution. Trigger-tuning is now closed as a bounded line of work, and future progress should come from the next architectural bottleneck rather than more local trigger variants.
+
+---
+
 ## 📂 PARALLEL DEPLOYMENTS (Ancillary Projects)
 
 1. **Smart Cultural Storyteller (Hybrid Failover RAG)** 

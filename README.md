@@ -77,6 +77,26 @@ ADAPT_REFINE is now the default adaptive execution policy for generator-backed f
 
 This is a bounded adaptive-cognition result, not a claim of AGI. The system can now detect fixed-family failure, adopt a better adjacent family, and complete recovery under realistic budgets without harming the validated baseline paths.
 
+### Final Bounded Trigger-Tuning Result (Closed)
+
+The one-shot contradiction probe is now the default final trigger-tuning improvement for the adaptive planner path in generator-backed fixed-family domains.
+
+"A one-shot contradiction-probe policy safely improved budget-8 recovery for gs=5 overflow anomalies while preserving baseline behavior and zero silent failure. It did not improve gs=3 underflow anomalies, so trigger-tuning remains only partially effective and is now closed as a bounded line of work."
+
+What improved:
+- Budget-8 overflow mismatch recovery for cyber and clinical `gs=5` cases improved from `0.00 -> 0.12`.
+- Budget-12 overflow mismatch recovery for cyber and clinical `gs=5` cases improved from `0.69 -> 0.86` and `0.68 -> 0.86`.
+- Silent failure stayed at `0`, and standard cyber `gs=4` plus planner-integrated C6 baselines stayed intact.
+
+What did not improve:
+- `gs=3` underflow anomalies did not improve.
+- The earlier upward-capacity trigger remained safe but operationally inert and is not part of the default path.
+
+Why this line is closed:
+- The result is real but narrow.
+- It is not a general early-contradiction solution.
+- Further trigger micro-tuning is less justified than moving to the next architectural bottleneck.
+
 ---
 
 ## Architecture

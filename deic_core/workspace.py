@@ -51,6 +51,12 @@ class CognitiveState:
     adaptation_turn: int = -1
     remaining_budget_at_adaptation: int = -1
     adaptation_before_full_coverage: bool = False
+    trusted_shifted_count_lower_bound: int = 0
+    current_family_capacity: int = 0
+    precollapse_capacity_trigger_turn: int = -1
+    capacity_trigger_direction: str = "" # "" | "UPWARD"
+    contradiction_probe_trigger_turn: int = -1
+    contradiction_probe_count: int = 0
     post_adaptation_queries: int = 0
     post_adaptation_commit_turn: int = -1
     post_adaptation_escalation_turn: int = -1
@@ -75,6 +81,22 @@ class CognitiveState:
     def from_engine(cls, engine, **kwargs):
         from .inspector import BeliefInspector
         inspector = BeliefInspector(engine)
+        current_capacity = 0
+        if engine._current_generator and hasattr(engine._current_generator, "family_spec"):
+            spec = engine._current_generator.family_spec()
+            if spec is not None and hasattr(spec, "group_size"):
+                current_capacity = spec.group_size
+
+        trusted_shifted_lb = 0
+        trusted = engine._trusted_source
+        if trusted is not None:
+            shifted_items = {
+                item
+                for item, value in engine._source_observations.get(trusted, [])
+                if value != engine._initial_values.get(item)
+            }
+            trusted_shifted_lb = len(shifted_items)
+
         state = cls(
             entropy=engine.calculate_entropy() if hasattr(engine, 'calculate_entropy') else 0.0,
             confidence_margin=inspector.inspect(top_n=1)['confidence_margin'],
@@ -86,6 +108,8 @@ class CognitiveState:
             is_flagged=any(s > 2 for s in engine._suspicion_scores.values()),
             reset_count=engine.reset_count,
             suspicion_triggers=engine.suspicion_triggers,
+            trusted_shifted_count_lower_bound=trusted_shifted_lb,
+            current_family_capacity=current_capacity,
             query_rationale=inspector.inspect(top_n=1)['query_rationale'],
             all_hypotheses=engine.score_hypotheses(),
             items_queried=len(engine._queried_values),
