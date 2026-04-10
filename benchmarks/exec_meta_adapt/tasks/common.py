@@ -109,6 +109,35 @@ def build_adapter(domain, variant="frozen_full", **overrides):
                 **overrides,
             )
 
+    if variant == "dsl_v1":
+        common = {
+            "adaptive_trust": True,
+            "enable_adapt_refine": True,
+            "enable_final_contradiction_probe": True,
+            "enable_post_adaptation_guarded_probe": True,
+            "enable_post_probe_family_proposal": True,
+        }
+        if domain == "benchmark":
+            return DEICBenchmarkAdapter(use_planner=True, confidence_threshold=0.999, **common, **shared, **overrides)
+        if domain == "cyber":
+            return CyberDEICAdapter(
+                use_planner=True,
+                confidence_threshold=0.999,
+                coverage_threshold=1.0,
+                **common,
+                **shared,
+                **overrides,
+            )
+        if domain == "clinical":
+            return ClinicalDEICAdapter(
+                use_planner=True,
+                confidence_threshold=0.999,
+                coverage_threshold=1.0,
+                **common,
+                **shared,
+                **overrides,
+            )
+
     if variant == "no_planner":
         if domain == "benchmark":
             return DEICBenchmarkAdapter(

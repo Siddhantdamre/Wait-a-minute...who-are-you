@@ -45,6 +45,7 @@ results/dynamic_structure_learning/
 results/post_adaptation_guarded_probe/
 results/post_contradiction_recovery_analysis/
 results/post_probe_family_proposal/
+results/frontier_local/
 
 # Large data files (>100MB, GitHub limit)
 *.csv

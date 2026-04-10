@@ -19,6 +19,7 @@ VALID_TASK_CLASSES = frozenset(
 VALID_ADAPTER_VARIANTS = frozenset(
     {
         "frozen_full",
+        "dsl_v1",
         "no_planner",
         "no_self_model",
         "no_memory",
