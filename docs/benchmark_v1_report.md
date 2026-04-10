@@ -97,3 +97,4 @@
 - Baseline and anomaly cohorts are reported separately rather than blended.
 - Held-out transfer remains an explicit split, not an in-place seed reuse trick.
 - Ablations stay on the frozen architecture surface and do not reopen core inference design.
+- A later one-shot post-probe family proposal safely improved hard `gs=7` recovery while preserving frozen baseline behavior and zero silent failure. Some reduced escalations became a small number of wrong commits, but the net effect was strongly positive because final accuracy increased materially.

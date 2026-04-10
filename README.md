@@ -108,6 +108,19 @@ See [docs/DEIC_BENCHMARK_PACKAGE.md](docs/DEIC_BENCHMARK_PACKAGE.md) for the cur
 
 The concrete baseline freeze for that work now lives in [docs/milestones/deic_platform_v1.md](docs/milestones/deic_platform_v1.md), and the runnable benchmark package lives in [benchmarks/exec_meta_adapt/README.md](benchmarks/exec_meta_adapt/README.md).
 
+### Post-Probe Family Proposal Recovery
+
+A one-shot post-probe family proposal safely improved recovery on hard `gs=7` mismatch cases after surfaced contradiction while preserving frozen baseline behavior and zero silent failure.
+
+What improved:
+- Cyber `gs=7` final accuracy improved from `0.00 -> 0.17` at budget `8` and `0.00 -> 0.39` at budget `12`.
+- Clinical `gs=7` final accuracy improved from `0.00 -> 0.16` at budget `8` and `0.00 -> 0.43` at budget `12`.
+- Escalation dropped materially on the budget-12 `gs=7` cases while standard `gs=4`, C6, and `gs=5` paths stayed flat.
+
+Important nuance:
+- Some reduced escalations became a small number of wrong commits on the hard `gs=7` budget-12 cases.
+- The net effect remained strongly positive because final accuracy increased materially while silent failure stayed at `0`.
+
 ---
 
 ## Architecture

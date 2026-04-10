@@ -297,3 +297,99 @@ def test_final_contradiction_probe_only_fires_once():
     planner = MinimalPlanner(enable_final_contradiction_probe=True)
     d = planner.decide(ws, sm, remaining_budget=2)
     assert d.mode == PlannerMode.REFINE
+
+
+def test_post_adaptation_guarded_probe_triggers_before_early_commit():
+    ws = _make_ws(
+        trusted_source_locked=True,
+        entropy=0.0,
+        confidence_margin=1.0,
+        active_hypotheses_count=1,
+        top_hypotheses=[({'shifted_items': frozenset({"a"}), 'multiplier': 1.5}, 1.0)],
+        all_hypotheses=[({'shifted_items': frozenset({"a"}), 'multiplier': 1.5}, 1.0)],
+        adaptation_count=1,
+        adaptation_turn=5,
+        current_family_capacity=5,
+        trusted_shifted_count_lower_bound=5,
+        items_queried=6,
+        items_total=8,
+        post_adaptation_queries=1,
+        post_adaptation_probe_count=0,
+    )
+    sm = _make_sm(ws)
+    planner = MinimalPlanner(
+        enable_adapt_refine=True,
+        enable_post_adaptation_guarded_probe=True,
+        coverage_threshold=1.0,
+    )
+    d = planner.decide(ws, sm, remaining_budget=2)
+    assert d.mode == PlannerMode.CONTRADICTION_PROBE
+    assert "saturated" in d.rationale.lower()
+
+
+def test_post_adaptation_guarded_probe_only_fires_once_per_adaptation_segment():
+    ws = _make_ws(
+        trusted_source_locked=True,
+        entropy=0.0,
+        confidence_margin=1.0,
+        active_hypotheses_count=1,
+        top_hypotheses=[({'shifted_items': frozenset({"a"}), 'multiplier': 1.5}, 1.0)],
+        all_hypotheses=[({'shifted_items': frozenset({"a"}), 'multiplier': 1.5}, 1.0)],
+        adaptation_count=1,
+        adaptation_turn=5,
+        current_family_capacity=5,
+        trusted_shifted_count_lower_bound=5,
+        items_queried=6,
+        items_total=8,
+        post_adaptation_queries=1,
+        post_adaptation_probe_count=1,
+    )
+    sm = _make_sm(ws)
+    planner = MinimalPlanner(
+        enable_adapt_refine=True,
+        enable_post_adaptation_guarded_probe=True,
+        coverage_threshold=1.0,
+    )
+    d = planner.decide(ws, sm, remaining_budget=2)
+    assert d.mode == PlannerMode.EARLY_COMMIT
+
+
+def test_post_probe_family_proposal_triggers_after_surfaced_contradiction():
+    ws = _make_ws(
+        trusted_source_locked=True,
+        active_hypotheses_count=0,
+        top_hypotheses=[],
+        all_hypotheses=[],
+        adaptation_count=2,
+        adaptation_turn=6,
+        current_family_capacity=6,
+        trusted_shifted_count_lower_bound=7,
+        contradiction_after_post_adaptation_probe=True,
+        contradiction_surface_turn=7,
+        post_probe_family_proposal_count=0,
+    )
+    sm = _make_sm(ws)
+    planner = MinimalPlanner(enable_post_probe_family_proposal=True)
+    d = planner.decide(ws, sm, remaining_budget=1)
+    assert d.mode == PlannerMode.POST_PROBE_FAMILY_PROPOSAL
+    assert "guarded probe" in d.rationale.lower()
+
+
+def test_post_probe_family_proposal_only_fires_once():
+    ws = _make_ws(
+        trusted_source_locked=True,
+        active_hypotheses_count=0,
+        top_hypotheses=[],
+        all_hypotheses=[],
+        adaptation_count=2,
+        adaptation_turn=6,
+        current_family_capacity=6,
+        trusted_shifted_count_lower_bound=7,
+        contradiction_after_post_adaptation_probe=True,
+        contradiction_surface_turn=7,
+        post_probe_family_proposal_count=1,
+    )
+    sm = _make_sm(ws)
+    planner = MinimalPlanner(enable_post_probe_family_proposal=True)
+    d = planner.decide(ws, sm, remaining_budget=1)
+    assert d.mode == PlannerMode.ESCALATE

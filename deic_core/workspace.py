@@ -58,6 +58,20 @@ class CognitiveState:
     capacity_trigger_direction: str = "" # "" | "UPWARD"
     contradiction_probe_trigger_turn: int = -1
     contradiction_probe_count: int = 0
+    post_adaptation_probe_count: int = 0
+    post_adaptation_probe_turn: int = -1
+    contradiction_after_post_adaptation_probe: bool = False
+    untouched_item_count_at_probe: int = -1
+    contradiction_surface_turn: int = -1
+    recovery_attempt_started: bool = False
+    recovery_path_taken: str = ""
+    recovery_blocker: str = ""
+    family_proposal_opened_after_probe: bool = False
+    post_probe_family_proposal_count: int = 0
+    post_probe_family_candidates_tested: List[str] = field(default_factory=list)
+    post_probe_family_adopted: str = ""
+    post_probe_family_fit_current: float = 0.0
+    post_probe_family_fit_best_candidate: float = 0.0
     post_adaptation_queries: int = 0
     post_adaptation_commit_turn: int = -1
     post_adaptation_escalation_turn: int = -1

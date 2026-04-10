@@ -68,6 +68,15 @@ class HypothesisGenerator:
         """Return bounded adjacent structure family specs for adaptation."""
         return []
 
+    def post_probe_proposal_families(
+        self,
+        shifted_lb: int,
+        items_total: int,
+        max_candidates: int = 2,
+    ) -> List[StructureFamilySpec]:
+        """Return a tiny bounded proposal menu after surfaced contradiction."""
+        return []
+
     @classmethod
     def from_spec(cls, spec: StructureFamilySpec) -> 'HypothesisGenerator':
         """Construct a generator from a StructureFamilySpec."""
@@ -122,6 +131,32 @@ class FixedPartitionGenerator(HypothesisGenerator):
             label=f"Fixed(gs={self._group_size + 1})",
         ))
         return candidates
+
+    def post_probe_proposal_families(
+        self,
+        shifted_lb: int,
+        items_total: int,
+        max_candidates: int = 2,
+    ) -> List[StructureFamilySpec]:
+        """
+        Return a tiny deterministic upward menu after a surfaced contradiction.
+
+        This stays bounded to a very small explicit family set so the proposal
+        step can escape the adjacent ceiling without becoming open-ended search.
+        """
+        start = max(self._group_size + 1, shifted_lb)
+        if start > items_total:
+            return []
+        stop = min(items_total, start + max(1, max_candidates) - 1)
+        mults = tuple(self._multipliers)
+        return [
+            StructureFamilySpec(
+                group_size=gs,
+                multipliers=mults,
+                label=f"Fixed(gs={gs})",
+            )
+            for gs in range(start, stop + 1)
+        ]
 
 
 class VariablePartitionGenerator(HypothesisGenerator):

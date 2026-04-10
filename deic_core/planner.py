@@ -8,6 +8,7 @@ class PlannerMode(enum.Enum):
     EXPLORE = "EXPLORE"           # Discovery of trust / broad latent space
     REFINE = "REFINE"             # Reducing entropy in a trusted subspace
     CONTRADICTION_PROBE = "CONTRADICTION_PROBE" # One forced untouched probe before risky commit
+    POST_PROBE_FAMILY_PROPOSAL = "POST_PROBE_FAMILY_PROPOSAL" # One-shot bounded family menu after surfaced contradiction
     ADAPT_REFINE = "ADAPT_REFINE" # Focused refinement after adopting a new family
     EARLY_COMMIT = "EARLY_COMMIT" # Threshold met, stopping early
     ESCALATE = "ESCALATE"         # Budget low, ambiguity high, must abstain
@@ -36,6 +37,8 @@ class MinimalPlanner:
         min_post_adaptation_queries: int = 1,
         enable_upward_capacity_trigger: bool = False,
         enable_final_contradiction_probe: bool = True,
+        enable_post_adaptation_guarded_probe: bool = False,
+        enable_post_probe_family_proposal: bool = False,
     ):
         self.confidence_threshold = confidence_threshold
         self.entropy_floor = entropy_floor
@@ -45,6 +48,8 @@ class MinimalPlanner:
         self.min_post_adaptation_queries = min_post_adaptation_queries
         self.enable_upward_capacity_trigger = enable_upward_capacity_trigger
         self.enable_final_contradiction_probe = enable_final_contradiction_probe
+        self.enable_post_adaptation_guarded_probe = enable_post_adaptation_guarded_probe
+        self.enable_post_probe_family_proposal = enable_post_probe_family_proposal
 
     def upward_capacity_trigger_ready(
         self,
@@ -92,6 +97,55 @@ class MinimalPlanner:
             and contradiction_probe_count == 0
         )
 
+    def post_adaptation_guarded_probe_ready(
+        self,
+        ws: CognitiveState,
+        remaining_budget: int,
+        active_hypotheses: Optional[int] = None,
+    ) -> bool:
+        """Return True when one post-adaptation untouched probe is justified."""
+        if active_hypotheses is None:
+            active_hypotheses = ws.get("active_hypotheses_count", 0)
+        current_capacity = ws.get("current_family_capacity", 0)
+        shifted_lb = ws.get("trusted_shifted_count_lower_bound", 0)
+        adaptation_count = ws.get("adaptation_count", 0)
+        post_adaptation_probe_count = ws.get("post_adaptation_probe_count", 0)
+        return (
+            self.enable_post_adaptation_guarded_probe
+            and ws.trusted_source_locked
+            and adaptation_count > 0
+            and ws.get("adaptation_turn", -1) >= 0
+            and active_hypotheses > 0
+            and active_hypotheses <= 1
+            and current_capacity >= 1
+            and shifted_lb == current_capacity
+            and ws.get("items_queried", 0) < ws.get("items_total", 0)
+            and remaining_budget >= 1
+            and post_adaptation_probe_count < adaptation_count
+        )
+
+    def post_probe_family_proposal_ready(
+        self,
+        ws: CognitiveState,
+        active_hypotheses: Optional[int] = None,
+    ) -> bool:
+        """Return True when surfaced contradiction justifies one bounded family proposal."""
+        if active_hypotheses is None:
+            active_hypotheses = ws.get("active_hypotheses_count", 0)
+        current_capacity = ws.get("current_family_capacity", 0)
+        shifted_lb = ws.get("trusted_shifted_count_lower_bound", 0)
+        return (
+            self.enable_post_probe_family_proposal
+            and ws.trusted_source_locked
+            and ws.get("contradiction_after_post_adaptation_probe", False)
+            and ws.get("contradiction_surface_turn", -1) >= 0
+            and ws.get("adaptation_count", 0) > 0
+            and active_hypotheses == 0
+            and current_capacity >= 1
+            and shifted_lb >= current_capacity
+            and ws.get("post_probe_family_proposal_count", 0) == 0
+        )
+
     def decide(
         self,
         ws: CognitiveState,
@@ -119,6 +173,18 @@ class MinimalPlanner:
         post_adaptation_queries = ws.get("post_adaptation_queries", 0)
         coverage = ws.get("items_queried", 0) / max(1, ws.get("items_total", 1))
         in_adapt_refine = self.enable_adapt_refine and adaptation_count > 0 and trust_locked
+
+        if self.post_probe_family_proposal_ready(ws, active_hyps):
+            current_capacity = ws.get("current_family_capacity", 0)
+            shifted_lb = ws.get("trusted_shifted_count_lower_bound", 0)
+            return PlannerDecision(
+                mode=PlannerMode.POST_PROBE_FAMILY_PROPOSAL,
+                rationale=(
+                    f"Surfaced contradiction after guarded probe shows family capacity {current_capacity} "
+                    f"is still below trusted shifted lower bound {shifted_lb}."
+                ),
+                recommendation="Replay a tiny bounded upward family menu before escalating."
+            )
 
         # ── R0: Inconsistent Data (Contradiction) ─────────────────
         if active_hyps == 0:
@@ -183,6 +249,17 @@ class MinimalPlanner:
             )
 
         # ── R2: Budget gone + high uncertainty → ESCALATE ──────────
+        if self.post_adaptation_guarded_probe_ready(ws, remaining_budget, active_hyps):
+            current_capacity = ws.get("current_family_capacity", 0)
+            return PlannerDecision(
+                mode=PlannerMode.CONTRADICTION_PROBE,
+                rationale=(
+                    f"Adapted family remains saturated at capacity {current_capacity} "
+                    f"with untouched items still hidden."
+                ),
+                recommendation="Spend one guarded post-adaptation query on an untouched item before committing."
+            )
+
         if remaining_budget <= 0 and margin < self.confidence_threshold:
             return PlannerDecision(
                 mode=PlannerMode.ESCALATE,

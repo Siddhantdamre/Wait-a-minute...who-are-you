@@ -41,6 +41,10 @@ backup_*/
 # Benchmark run artifacts
 benchmarks/exec_meta_adapt/results/*.json
 results/deic_cogbench/
+results/dynamic_structure_learning/
+results/post_adaptation_guarded_probe/
+results/post_contradiction_recovery_analysis/
+results/post_probe_family_proposal/
 
 # Large data files (>100MB, GitHub limit)
 *.csv

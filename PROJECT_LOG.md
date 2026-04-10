@@ -128,6 +128,17 @@ This document serves as the official historical ledger tracking the structural e
 
 ---
 
+## MILESTONE 13: One-Shot Post-Probe Family Proposal Recovery
+**Status**: `COMPLETED` | **Code**: `deic_core/planner.py`, `deic_core/hypothesis.py`, `benchmark/deic_adapter.py`, `experiments/cyber_transfer/adapter.py`, `experiments/clinical_transfer/adapter.py`
+
+*   **Recovered the Next Bottleneck:** After the guarded post-adaptation probe made contradiction visible on hard `gs=7` cases, the remaining blocker was no longer contradiction discovery. It was the fact that recovery stayed trapped in adjacent replay and then escalated.
+*   **Bounded Recovery Extension:** Added a one-shot `POST_PROBE_FAMILY_PROPOSAL` path that opens only after a surfaced guarded-probe contradiction under locked trust. The proposal menu is tiny, deterministic, generator-backed, and replay-validated.
+*   **Measured Gain:** Cyber `gs=7` accuracy improved from `0.00 -> 0.17` at budget `8` and `0.00 -> 0.39` at budget `12`. Clinical `gs=7` improved from `0.00 -> 0.16` and `0.00 -> 0.43`. Budget-12 escalations dropped sharply.
+*   **Safety Held:** Silent failure stayed at `0`, false adaptation stayed at `0` on the frozen `gs=4` and C6 baselines, and standard `gs=5` plus protected baseline paths stayed flat.
+*   **Nuance:** Some former escalations became a small number of wrong commits on the hard budget-12 `gs=7` cases, but the net effect was strongly positive because correct recovery increased materially.
+
+---
+
 ## 📂 PARALLEL DEPLOYMENTS (Ancillary Projects)
 
 1. **Smart Cultural Storyteller (Hybrid Failover RAG)** 
