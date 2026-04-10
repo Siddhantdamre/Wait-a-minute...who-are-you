@@ -67,6 +67,14 @@ class CognitiveState:
     recovery_path_taken: str = ""
     recovery_blocker: str = ""
     family_proposal_opened_after_probe: bool = False
+    family_proposal_trigger_count: int = 0
+    candidate_family_specs_tested: List[str] = field(default_factory=list)
+    adopted_family_spec: str = ""
+    proposal_turn: int = -1
+    proposal_search_outcome: str = ""
+    fit_score_current_family: float = 0.0
+    fit_score_candidate_family: float = 0.0
+    family_search_exhausted: bool = False
     post_probe_family_proposal_count: int = 0
     post_probe_family_candidates_tested: List[str] = field(default_factory=list)
     post_probe_family_adopted: str = ""

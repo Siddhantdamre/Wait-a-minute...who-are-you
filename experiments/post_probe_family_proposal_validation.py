@@ -83,8 +83,14 @@ def _make_cases() -> List[ValidationCase]:
         ValidationCase("cyber_gs4_b12", "cyber", 12, 4, "standard_inference"),
         ValidationCase("c6_standard_b8", "benchmark", 8, 4, "standard_inference"),
         ValidationCase("c6_standard_b12", "benchmark", 12, 4, "standard_inference"),
+        ValidationCase("cyber_gs3_b8", "cyber", 8, 3, "adaptive_mismatch"),
+        ValidationCase("cyber_gs3_b12", "cyber", 12, 3, "adaptive_mismatch"),
         ValidationCase("cyber_gs5_b12", "cyber", 12, 5, "adaptive_mismatch"),
+        ValidationCase("clinical_gs3_b8", "clinical", 8, 3, "adaptive_mismatch"),
+        ValidationCase("clinical_gs3_b12", "clinical", 12, 3, "adaptive_mismatch"),
+        ValidationCase("clinical_gs5_b8", "clinical", 8, 5, "adaptive_mismatch"),
         ValidationCase("clinical_gs5_b12", "clinical", 12, 5, "adaptive_mismatch"),
+        ValidationCase("cyber_gs5_b8", "cyber", 8, 5, "adaptive_mismatch"),
         ValidationCase("cyber_gs7_b8", "cyber", 8, 7, "adaptive_mismatch"),
         ValidationCase("cyber_gs7_b12", "cyber", 12, 7, "adaptive_mismatch"),
         ValidationCase("clinical_gs7_b8", "clinical", 8, 7, "adaptive_mismatch"),
@@ -102,7 +108,11 @@ def _episodes_for_case(case: ValidationCase, n_episodes: int):
         if case.true_gs == 4:
             episodes = generate_cyber_episodes(n_episodes, seed_offset=2000 if case.budget == 8 else 12000)
         else:
-            seed_offset = {5: 7000, 7: 5000 if case.budget == 8 else 50100}[case.true_gs]
+            seed_offset = {
+                3: 8000 if case.budget == 8 else 80100,
+                5: 7000 if case.budget == 8 else 70100,
+                7: 5000 if case.budget == 8 else 50100,
+            }[case.true_gs]
             episodes = generate_anomaly_episodes(n_episodes, group_size=case.true_gs, seed_offset=seed_offset)
         for ep in episodes:
             ep.max_queries = case.budget
@@ -110,7 +120,11 @@ def _episodes_for_case(case: ValidationCase, n_episodes: int):
     episodes = generate_clinical_anomaly_episodes(
         n_episodes,
         group_size=case.true_gs,
-        seed_offset={5: 91000, 7: 111000 if case.budget == 8 else 112000}[case.true_gs],
+        seed_offset={
+            3: 90000 if case.budget == 8 else 90100,
+            5: 91000 if case.budget == 8 else 91100,
+            7: 111000 if case.budget == 8 else 112000,
+        }[case.true_gs],
     )
     for ep in episodes:
         ep.max_queries = case.budget
@@ -196,6 +210,7 @@ def _aggregate_case(case: ValidationCase, results: List[Dict[str, Any]]) -> Dict
         "false_adaptation_rate": round(false_adaptation / total, 4),
         "silent_failure_rate": round(silent_failure / total, 4),
         "proposal_opened_after_probe_rate": round(proposal_opened / total, 4),
+        "proposal_trigger_rate": round(proposal_opened / total, 4),
         "correct_proposal_adoption_rate": round(correct_proposal_adoption / max(1, proposal_opened), 4) if proposal_opened else 0.0,
     }
 
@@ -233,6 +248,7 @@ def run_validation(n_episodes: int) -> Dict[str, Any]:
                 "after_false_adaptation_rate": after["false_adaptation_rate"],
                 "before_silent_failure_rate": before["silent_failure_rate"],
                 "after_silent_failure_rate": after["silent_failure_rate"],
+                "after_proposal_trigger_rate": after["proposal_trigger_rate"],
                 "after_proposal_opened_after_probe_rate": after["proposal_opened_after_probe_rate"],
                 "after_correct_proposal_adoption_rate": after["correct_proposal_adoption_rate"],
             }
@@ -255,7 +271,7 @@ def _print_summary(validation: Dict[str, Any]) -> None:
             f"{row['before_wrong_commit_rate']:.2f} | {row['after_wrong_commit_rate']:.2f} | "
             f"{row['before_wrong_commit_after_adaptation_rate']:.2f} | {row['after_wrong_commit_after_adaptation_rate']:.2f} | "
             f"{row['before_escalation_rate']:.2f} | {row['after_escalation_rate']:.2f} | "
-            f"{row['after_proposal_opened_after_probe_rate']:.2f} | {row['after_correct_proposal_adoption_rate']:.2f} |"
+            f"{row['after_proposal_trigger_rate']:.2f} | {row['after_correct_proposal_adoption_rate']:.2f} |"
         )
 
 

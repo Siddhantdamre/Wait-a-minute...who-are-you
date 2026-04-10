@@ -136,6 +136,7 @@ This document serves as the official historical ledger tracking the structural e
 *   **Measured Gain:** Cyber `gs=7` accuracy improved from `0.00 -> 0.17` at budget `8` and `0.00 -> 0.39` at budget `12`. Clinical `gs=7` improved from `0.00 -> 0.16` and `0.00 -> 0.43`. Budget-12 escalations dropped sharply.
 *   **Safety Held:** Silent failure stayed at `0`, false adaptation stayed at `0` on the frozen `gs=4` and C6 baselines, and standard `gs=5` plus protected baseline paths stayed flat.
 *   **Nuance:** Some former escalations became a small number of wrong commits on the hard budget-12 `gs=7` cases, but the net effect was strongly positive because correct recovery increased materially.
+*   **Scope Boundaries:** This is a bounded dynamic structure learning result, not a broad structure-learning breakthrough. Gains in this first pass are concentrated in overflow-style unseen mismatch cases (`gs=7`), while adjacent mismatch slices such as `gs=3` and `gs=5` remained largely unchanged.
 
 ---
 

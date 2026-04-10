@@ -121,6 +121,10 @@ Important nuance:
 - Some reduced escalations became a small number of wrong commits on the hard `gs=7` budget-12 cases.
 - The net effect remained strongly positive because final accuracy increased materially while silent failure stayed at `0`.
 
+DSL v1 scope:
+- DSL v1 introduces a bounded replay-validated family proposal step that preserves frozen safety and baseline guards while materially improving unseen `gs=7` mismatch recovery.
+- Gains in this first pass are concentrated in overflow-style unseen mismatch cases; adjacent mismatch slices such as `gs=3` and `gs=5` remained largely unchanged.
+
 ---
 
 ## Architecture

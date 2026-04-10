@@ -273,6 +273,14 @@ class DEICBenchmarkAdapter:
         recovery_path_taken = ""
         recovery_blocker = ""
         family_proposal_opened_after_probe = False
+        family_proposal_trigger_count = 0
+        candidate_family_specs_tested = []
+        adopted_family_spec = ""
+        proposal_turn = -1
+        proposal_search_outcome = ""
+        fit_score_current_family = 0.0
+        fit_score_candidate_family = 0.0
+        family_search_exhausted = False
         post_probe_family_proposal_count = 0
         post_probe_family_candidates_tested = []
         post_probe_family_adopted = ""
@@ -321,6 +329,14 @@ class DEICBenchmarkAdapter:
             ws.recovery_path_taken = recovery_path_taken
             ws.recovery_blocker = recovery_blocker
             ws.family_proposal_opened_after_probe = family_proposal_opened_after_probe
+            ws.family_proposal_trigger_count = family_proposal_trigger_count
+            ws.candidate_family_specs_tested = list(candidate_family_specs_tested)
+            ws.adopted_family_spec = adopted_family_spec
+            ws.proposal_turn = proposal_turn
+            ws.proposal_search_outcome = proposal_search_outcome
+            ws.fit_score_current_family = fit_score_current_family
+            ws.fit_score_candidate_family = fit_score_candidate_family
+            ws.family_search_exhausted = family_search_exhausted
             ws.post_probe_family_proposal_count = post_probe_family_proposal_count
             ws.post_probe_family_candidates_tested = list(post_probe_family_candidates_tested)
             ws.post_probe_family_adopted = post_probe_family_adopted
@@ -456,11 +472,17 @@ class DEICBenchmarkAdapter:
                 from deic_core.hypothesis import HypothesisGenerator
 
                 family_proposal_opened_after_probe = True
+                family_proposal_trigger_count += 1
                 recovery_attempt_started = True
                 recovery_path_taken = "post_probe_family_proposal"
                 post_probe_family_proposal_count += 1
                 post_probe_family_candidates_tested = []
                 post_probe_family_adopted = ""
+                candidate_family_specs_tested = []
+                adopted_family_spec = ""
+                proposal_turn = env.turn
+                proposal_search_outcome = "opened"
+                family_search_exhausted = False
 
                 current_fit = {
                     "active_hypotheses": ws.get("active_hypotheses_count", 0),
@@ -468,6 +490,7 @@ class DEICBenchmarkAdapter:
                     "entropy": ws.get("entropy", 0.0),
                 }
                 post_probe_family_fit_current = _fit_score(current_fit)
+                fit_score_current_family = post_probe_family_fit_current
 
                 gen = engine._current_generator
                 candidates = []
@@ -487,6 +510,7 @@ class DEICBenchmarkAdapter:
 
                 for spec in candidates:
                     post_probe_family_candidates_tested.append(str(spec))
+                    candidate_family_specs_tested.append(str(spec))
                     replay = engine.reinitialize_beliefs(HypothesisGenerator.from_spec(spec))
                     if replay["active_hypotheses"] <= 0:
                         continue
@@ -494,13 +518,16 @@ class DEICBenchmarkAdapter:
                         best_result = replay
                         best_spec = spec
 
-                if best_result is not None:
+                if best_result is not None and _fit_score(best_result) > post_probe_family_fit_current:
                     post_probe_family_fit_best_candidate = _fit_score(best_result)
+                    fit_score_candidate_family = post_probe_family_fit_best_candidate
                     engine.reinitialize_beliefs(HypothesisGenerator.from_spec(best_spec))
                     engine.adaptation_count = saved_ac + 1
                     post_probe_family_adopted = str(best_spec)
+                    adopted_family_spec = post_probe_family_adopted
                     family_search_trigger = "post_probe_family_proposal"
                     family_search_outcome = "adopted"
+                    proposal_search_outcome = "adopted"
                     adaptation_turn = env.turn
                     remaining_budget_at_adaptation = max(0, remaining)
                     adaptation_before_full_coverage = (
@@ -538,9 +565,12 @@ class DEICBenchmarkAdapter:
                 engine._current_generator = saved_g
                 engine.adaptation_count = saved_ac
                 post_probe_family_fit_best_candidate = -1.0
+                fit_score_candidate_family = post_probe_family_fit_best_candidate
                 recovery_blocker = "post_probe_family_proposal_no_survivor"
                 family_search_trigger = "post_probe_family_proposal"
                 family_search_outcome = "escalated"
+                proposal_search_outcome = "escalated"
+                family_search_exhausted = True
                 escalate_action = {"type": "escalate_c6_unresolved"}
                 entry = _trajectory_entry(
                     {
@@ -573,6 +603,14 @@ class DEICBenchmarkAdapter:
                 ws.recovery_blocker = recovery_blocker
                 ws.recovery_path_taken = recovery_path_taken
                 ws.family_proposal_opened_after_probe = family_proposal_opened_after_probe
+                ws.family_proposal_trigger_count = family_proposal_trigger_count
+                ws.candidate_family_specs_tested = list(candidate_family_specs_tested)
+                ws.adopted_family_spec = adopted_family_spec
+                ws.proposal_turn = proposal_turn
+                ws.proposal_search_outcome = proposal_search_outcome
+                ws.fit_score_current_family = fit_score_current_family
+                ws.fit_score_candidate_family = fit_score_candidate_family
+                ws.family_search_exhausted = family_search_exhausted
                 ws.post_probe_family_proposal_count = post_probe_family_proposal_count
                 ws.post_probe_family_candidates_tested = list(post_probe_family_candidates_tested)
                 ws.post_probe_family_adopted = post_probe_family_adopted

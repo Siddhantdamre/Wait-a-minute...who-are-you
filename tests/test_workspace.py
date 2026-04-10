@@ -184,3 +184,16 @@ def test_workspace_dict_access():
     assert ws['entropy'] == 1.5
     assert ws['confidence_margin'] == 0.8
     assert ws.get('nonexistent', 42) == 42
+
+
+def test_workspace_dsl_v1_telemetry_defaults():
+    """DSL v1 telemetry fields should exist with stable defaults."""
+    ws = CognitiveState()
+    assert ws.family_proposal_trigger_count == 0
+    assert ws.candidate_family_specs_tested == []
+    assert ws.adopted_family_spec == ""
+    assert ws.proposal_turn == -1
+    assert ws.proposal_search_outcome == ""
+    assert ws.fit_score_current_family == 0.0
+    assert ws.fit_score_candidate_family == 0.0
+    assert ws.family_search_exhausted is False
