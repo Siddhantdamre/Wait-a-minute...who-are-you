@@ -11,6 +11,18 @@ LOCAL_MODEL_CONFIGS = {
         "max_new_tokens": 96,
         "notes": "Open small instruct baseline that avoids gated-model friction while staying Kaggle-feasible.",
     },
+    "tinyllama": {
+        "label": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+        "hf_model_id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+        "max_new_tokens": 96,
+        "notes": "Llama-family small instruct baseline that is fully open and easy to run locally.",
+    },
+    "granite": {
+        "label": "ibm-granite/granite-3.1-2b-instruct",
+        "hf_model_id": "ibm-granite/granite-3.1-2b-instruct",
+        "max_new_tokens": 96,
+        "notes": "Small open instruct model that provides a stronger non-Qwen comparison point without gated-model friction.",
+    },
 }
 
 
