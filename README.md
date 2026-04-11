@@ -1,250 +1,306 @@
-# DEIC — Discrete Executive Inference Core
+# DEIC: Discrete Executive Inference Core
 
-A reusable cognitive subsystem for **hidden-state belief revision under partial observability**.
+A research repository for bounded cognitive reasoning under partial observability.
 
-DEIC maintains a discrete hypothesis bank over hidden combinatorial structure, tracks source reliability through adaptive trust discovery, and allocates diagnostic queries by expected information gain under strict budget constraints.
+This project centers on **DEIC**: a reusable executive inference subsystem that maintains discrete hidden-state beliefs, tracks source reliability, allocates diagnostic queries under budget pressure, and supports bounded adaptive recovery when the assumed structure family is wrong.
 
----
+The repository now contains three mature layers of work:
 
-## Key Result
+1. **A frozen bounded cognitive subsystem** in `deic_core/`
+2. **A reusable benchmark package** in `benchmarks/exec_meta_adapt/`
+3. **A metacognition benchmark path** that evaluates `COMMIT` vs `ABSTAIN` vs `ESCALATE` behavior in open-weight models
 
-**DEIC's core inference mechanisms transfer across domains. The main adaptation requirement is the hypothesis generator, not the trust, query selection, or posterior update logic.**
-
-This was demonstrated through three domains:
-- **Byzantine Executive Benchmark (C6)** — original development domain
-- **Cyber Incident Diagnosis** — isomorphic transfer, zero code changes
-- **Clinical Deterioration Monitoring** — non-isomorphic transfer, one backward-compatible change (`group_sizes` parameter)
+This is **not** a claim of AGI. It is a concrete, testable research program around hidden-state inference, trust, safety-aware abstention, bounded adaptation, and metacognitive evaluation.
 
 ---
 
-## What DEIC Does
+## What This Repository Contains
 
-1. **Infers hidden structure** from sparse observations
-2. **Tracks source reliability** — identifies which information sources are trustworthy
-3. **Actively allocates queries** under a fixed budget to maximize information gain
-4. **Revises beliefs safely** when the world changes
-5. **Transfers across domains** — core inference logic is domain-agnostic; only the hypothesis generator needs adaptation
+### 1. DEIC Core
 
-## What DEIC Is Not
+The main bounded cognitive subsystem lives in `deic_core/`.
 
-- Not a claim of building AGI
-- Not general intelligence, common sense reasoning, or universal planning
-- Not human-level cognition
-- It solves one specific family of structured inference problems under partial observability
+It provides:
+- discrete hidden-state belief maintenance
+- adaptive trust discovery
+- information-gain query selection
+- bounded planner-driven recovery
+- workspace, self-model, memory, and explanation support
 
----
+### 2. DEIC-CogBench
 
-## Empirical Results
+The packaged benchmark lives in `benchmarks/exec_meta_adapt/`.
 
-### Byzantine Executive Belief Benchmark (C6)
+It evaluates:
+- executive function
+- metacognition
+- adaptive learning under partial observability
+- safety-aware abstention and escalation
 
-| Solver | Budget=8 | Budget=12 |
-|---|---|---|
-| Random Baseline | ~0% | ~0% |
-| Continuous Hierarchical Core | 0.0% | 0.0% |
-| DEIC (no adaptive trust) | ~37% | ~81% |
-| **DEIC (adaptive trust)** | **~61%** | **~94%** |
+### 3. Frontier / Local Metacognition Benchmarking
 
-### Transfer: Cyber Incident Diagnosis (isomorphic, zero core changes)
+The local/open-weight metacognition benchmark lives in:
+- `benchmarks/exec_meta_adapt/frontier/`
+- `benchmarks/exec_meta_adapt/frontier_local/`
 
-| Solver | Budget=8 | Budget=12 |
-|---|---|---|
-| Random Baseline | 0.0% | 0.0% |
-| **DEIC (adaptive trust)** | **57.0%** | **94.0%** |
-
-### Transfer: Clinical Deterioration (non-isomorphic, variable group sizes)
-
-| Solver | Budget=8 | Budget=12 |
-|---|---|---|
-| Random Baseline | 0.0% | 0.0% |
-| DEIC (group_size=4 only, Gate 1) | 10.7% | 18.0% |
-| **DEIC (variable group_sizes, Gate 2)** | **26.2%** | **83.2%** |
-
-Gate 1 showed DEIC scored 56.6% on group-size=4 episodes but 0.0% on all others - proving the bottleneck was hypothesis generation, not inference logic. Gate 2's single backward-compatible change recovered non-4 episodes from 0% to 10-48%.
-
-### Bounded Adaptive Recovery (Phase 15d)
-
-ADAPT_REFINE is now the default adaptive execution policy for generator-backed fixed-family planner paths. It preserves the frozen baseline paths while making bounded family repair operationally useful after adoption.
-
-| Case | Budget=12 | Budget=16 |
-|---|---|---|
-| Cyber anomaly `gs=3` | 0.00 -> 0.46 | 0.37 -> 0.91 |
-| Cyber anomaly `gs=5` | 0.00 -> 0.69 | 0.58 -> 0.99 |
-| Clinical fixed-family mismatch `gs=3` | 0.00 -> 0.44 | 0.35 -> 0.90 |
-| Clinical fixed-family mismatch `gs=5` | 0.00 -> 0.68 | 0.60 -> 0.96 |
-| Cyber `gs=4` baseline | 0.90 -> 0.90 | 1.00 -> 1.00 |
-| C6 planner baseline | 0.91 -> 0.91 | 1.00 -> 1.00 |
-
-This is a bounded adaptive-cognition result, not a claim of AGI. The system can now detect fixed-family failure, adopt a better adjacent family, and complete recovery under realistic budgets without harming the validated baseline paths.
-
-### Final Bounded Trigger-Tuning Result (Closed)
-
-The one-shot contradiction probe is now the default final trigger-tuning improvement for the adaptive planner path in generator-backed fixed-family domains.
-
-"A one-shot contradiction-probe policy safely improved budget-8 recovery for gs=5 overflow anomalies while preserving baseline behavior and zero silent failure. It did not improve gs=3 underflow anomalies, so trigger-tuning remains only partially effective and is now closed as a bounded line of work."
-
-What improved:
-- Budget-8 overflow mismatch recovery for cyber and clinical `gs=5` cases improved from `0.00 -> 0.12`.
-- Budget-12 overflow mismatch recovery for cyber and clinical `gs=5` cases improved from `0.69 -> 0.86` and `0.68 -> 0.86`.
-- Silent failure stayed at `0`, and standard cyber `gs=4` plus planner-integrated C6 baselines stayed intact.
-
-What did not improve:
-- `gs=3` underflow anomalies did not improve.
-- The earlier upward-capacity trigger remained safe but operationally inert and is not part of the default path.
-
-Why this line is closed:
-- The result is real but narrow.
-- It is not a general early-contradiction solution.
-- Further trigger micro-tuning is less justified than moving to the next architectural bottleneck.
-
-### DEIC-CogBench v1
-
-The current phase is benchmark packaging rather than more trigger-tuning or architecture churn.
-
-See [docs/DEIC_BENCHMARK_PACKAGE.md](docs/DEIC_BENCHMARK_PACKAGE.md) for the current repo boundary:
-- what is finished
-- what is frozen
-- what becomes the benchmark package next
-
-The concrete baseline freeze for that work now lives in [docs/milestones/deic_platform_v1.md](docs/milestones/deic_platform_v1.md), and the runnable benchmark package lives in [benchmarks/exec_meta_adapt/README.md](benchmarks/exec_meta_adapt/README.md).
-
-### Post-Probe Family Proposal Recovery
-
-A one-shot post-probe family proposal safely improved recovery on hard `gs=7` mismatch cases after surfaced contradiction while preserving frozen baseline behavior and zero silent failure.
-
-What improved:
-- Cyber `gs=7` final accuracy improved from `0.00 -> 0.17` at budget `8` and `0.00 -> 0.39` at budget `12`.
-- Clinical `gs=7` final accuracy improved from `0.00 -> 0.16` at budget `8` and `0.00 -> 0.43` at budget `12`.
-- Escalation dropped materially on the budget-12 `gs=7` cases while standard `gs=4`, C6, and `gs=5` paths stayed flat.
-
-Important nuance:
-- Some reduced escalations became a small number of wrong commits on the hard `gs=7` budget-12 cases.
-- The net effect remained strongly positive because final accuracy increased materially while silent failure stayed at `0`.
-
-DSL v1 scope:
-- DSL v1 introduces a bounded replay-validated family proposal step that preserves frozen safety and baseline guards while materially improving unseen `gs=7` mismatch recovery.
-- Gains in this first pass are concentrated in overflow-style unseen mismatch cases; adjacent mismatch slices such as `gs=3` and `gs=5` remained largely unchanged.
+It tests whether models can correctly distinguish:
+- `COMMIT`: evidence is sufficient
+- `ABSTAIN`: evidence is insufficient, but not structurally broken
+- `ESCALATE`: contradiction, trust failure, or model insufficiency requires outside review
 
 ---
 
-## Architecture
+## Why This Project Matters
 
-DEIC separates into two cleanly independent concerns:
+The most important architectural result in this repo is:
 
+> **The reusable part of this cognition problem is the inference engine, not the domain-specific hypothesis generator.**
+
+That result was earned by:
+- solving the original Byzantine-style executive benchmark
+- transferring the same core to a cyber diagnosis domain
+- transferring again to a clinical deterioration domain
+- preserving safety and abstention behavior while adding bounded adaptive recovery
+- packaging the result into a benchmark other researchers can actually run
+
+On top of that, the post-submission metacognition benchmark now shows something stronger than a simple safe/unsafe split:
+
+> **The benchmark separates multiple metacognitive failure modes rather than rewarding one generic "safe" behavior.**
+
+Specifically, the current open-model expansion distinguishes:
+- **over-escalation collapse** (`qwen`, `smollm`)
+- **under-escalation / over-abstention tradeoff** (`granite`)
+- **parse/bluff fragility** (`tinyllama`)
+
+---
+
+## Architecture Overview
+
+### DEIC System Architecture
+
+```mermaid
+flowchart LR
+    A["Task Environment"] --> B["Adapter Layer"]
+    B --> C["Hypothesis Generator"]
+    B --> D["DEIC Core"]
+    D --> E["Trust Update"]
+    D --> F["Belief Scoring"]
+    D --> G["Query Selection"]
+    D --> H["Planner"]
+    H --> I["Workspace"]
+    H --> J["Self Model"]
+    H --> K["Memory"]
+    H --> L["Explanation Layer"]
+    C --> D
+    I --> H
+    J --> H
+    K --> H
+    H --> M["Commit / Abstain / Escalate"]
+    G --> A
 ```
-┌─────────────────────────────────┐
-│     Core Inference Engine       │  ← domain-agnostic, transfers
-│  ├ adaptive trust discovery     │
-│  ├ InfoGain query selection     │
-│  └ posterior elimination        │
-├─────────────────────────────────┤
-│   Hypothesis Generator          │  ← domain-specific, configurable
-│  └ initialize_beliefs(env_spec) │
-└─────────────────────────────────┘
+
+### Bounded Adaptive Recovery Path
+
+```mermaid
+flowchart TD
+    A["Observation Stream"] --> B["Belief Update"]
+    B --> C{"Trusted contradiction?"}
+    C -- "No" --> D["Normal query / commit path"]
+    C -- "Yes" --> E["Adjacent adaptation or bounded proposal"]
+    E --> F["Replay validation"]
+    F --> G{"Better surviving family?"}
+    G -- "Yes" --> H["Adopt family"]
+    H --> I["ADAPT_REFINE / recovery"]
+    I --> J["Commit or continue"]
+    G -- "No" --> K["Honest escalation"]
+```
+
+### Benchmark and Evaluation Flow
+
+```mermaid
+flowchart LR
+    A["Frozen DEIC Platform"] --> B["DEIC-CogBench v1"]
+    B --> C["Train Split"]
+    B --> D["Held-out Split"]
+    B --> E["Ablations"]
+    C --> F["Summary Tables"]
+    D --> F
+    E --> F
+    B --> G["Frontier / Local Metacognition Tasks"]
+    G --> H["Open-weight Model Runs"]
+    H --> I["Failure-mode Analysis"]
 ```
 
 ---
 
-## API
+## Core Results
 
-```python
-from deic_core import DEIC
+### Cross-Domain DEIC Result
 
-engine = DEIC(adaptive_trust=True)
+DEIC's core inference mechanisms transferred across:
+- the original Byzantine executive benchmark
+- cyber incident diagnosis
+- clinical deterioration monitoring
 
-# Fixed group size (benchmark/cyber)
-engine.initialize_beliefs({
-    'items': [...],
-    'sources': [...],
-    'group_size': 4,
-    'valid_multipliers': [1.5, 2.0, 3.0, 5.0],
-    'initial_values': {...},
-})
+The central finding was:
+- **trust handling, posterior update, and query selection transfer**
+- **the main adaptation requirement is the hypothesis generator**
 
-# Variable group sizes (clinical/general)
-engine.initialize_beliefs({
-    'items': [...],
-    'sources': [...],
-    'group_sizes': [2, 3, 4, 5, 6],
-    'valid_multipliers': [1.3, 1.8, 2.5],
-    'initial_values': {...},
-})
+### Bounded Adaptive Recovery
 
-while budget_remaining:
-    source, item = engine.select_query({
-        'remaining_turns': remaining,
-        'queried_pairs': already_queried,
-    })
-    value = query_environment(source, item)
-    engine.update_observation(source, item, value, t)
+The bounded adaptive path became operational through:
+- `ADAPT_REFINE`
+- final trigger closeout
+- one-shot post-probe family proposal
+- DSL v1 replay-validated bounded proposal
 
-answer = engine.propose_state()
-```
+This produced a real bounded DSL result:
+- protected baselines stayed intact
+- silent failure remained `0`
+- `gs=7` unseen overflow-style mismatch cases improved materially
+- the gain remained bounded and domain-shaped rather than open-ended
 
-### Methods
+### Metacognition Benchmark Result
 
-| Method | Purpose |
+The local/open-weight benchmark result is now:
+
+> Small open models can avoid bluffing and silent failure while still failing metacognitively in different ways.
+
+Current failure modes separated by the benchmark:
+- `qwen` / `smollm`: over-escalation collapse
+- `granite`: under-escalation / over-abstention tradeoff
+- `tinyllama`: parse/bluff fragility
+
+That means the benchmark is not merely scoring one "safe" pattern. It is distinguishing **different metacognitive safety/calibration failures**.
+
+---
+
+## Repository Map
+
+| Path | Purpose |
 |---|---|
-| `initialize_beliefs(env_spec)` | Set up hypothesis bank (supports `group_size` or `group_sizes`) |
-| `update_observation(source, item, value, t)` | Incorporate one piece of evidence |
-| `update_trust()` | Recompute source reliability scores |
-| `score_hypotheses()` | Inspect current belief state |
-| `select_query(budget_state)` | Choose next query by expected information gain |
-| `propose_state()` | Output MAP estimate of hidden world state |
+| `deic_core/` | Frozen bounded cognitive subsystem |
+| `benchmark/` | Legacy benchmark ladder and earlier harnesses |
+| `benchmarks/exec_meta_adapt/` | DEIC-CogBench v1 packaged benchmark |
+| `benchmarks/exec_meta_adapt/frontier/` | Frozen metacognition task, parser, and scorer contract |
+| `benchmarks/exec_meta_adapt/frontier_local/` | No-API local/open-weight runner |
+| `experiments/` | Validation harnesses, transfer runs, and archived negative results |
+| `docs/milestones/` | Frozen subsystem and benchmark milestone notes |
+| `docs/releases/` | Submission-ready notes, figures, and bundle docs |
+| `submission/` | Frozen exported submission assets |
+| `tests/` | Regression and smoke-test coverage |
+| `True_AGI_Core/` | Older historical AGI-oriented prototypes and reference material |
+
+For directory-level orientation, most first-party folders now also include their own `README.md`.
 
 ---
 
-## Project Structure
+## Important Checkpoints
 
-```
-├── deic_core/                        # Reusable module (domain-agnostic)
-│   ├── __init__.py
-│   └── core.py                       # DEIC class
-├── benchmark/                        # Kaggle Executive Functions benchmark
-│   ├── environment.py                # C3–C6 procedural environment
-│   ├── solvers.py                    # Original solver implementations
-│   ├── deic_adapter.py               # Benchmark <-> DEIC bridge
-│   ├── run_evaluation.py             # Evaluation harness
-│   └── kaggle_submission.ipynb       # Published notebook
-├── experiments/
-│   ├── cyber_transfer/               # Isomorphic transfer test
-│   │   ├── environment.py
-│   │   ├── adapter.py
-│   │   └── run_transfer_pilot.py
-│   └── clinical_transfer/            # Non-isomorphic transfer test
-│       ├── environment.py
-│       ├── adapter.py
-│       └── run_gate1_pilot.py
-├── tests/
-│   ├── test_golden_c6.py             # C6 golden regression guard
-│   └── test_transfer_regression.py   # Transfer parity guard
-└── PROJECT_LOG.md
-```
+| Tag / Checkpoint | Meaning |
+|---|---|
+| `v1.4-deic-cogbench` | Benchmark-package checkpoint |
+| `v1.5-post-probe-family-proposal` | Bounded recovery checkpoint |
+| `v1.6-dsl-v1` | First mergeable bounded dynamic-structure-learning result |
+| `submission-2026-04-16` | Frozen benchmark submission checkpoint |
 
 ---
 
-## Running
+## Quick Start
+
+### Install
+
+Use your preferred Python environment, then install the project dependencies you need for the target workflow.
+
+For local/open-weight metacognition benchmarking:
 
 ```bash
-# C6 golden regression
-python tests/test_golden_c6.py
+python -m pip install transformers accelerate sentencepiece
+```
 
-# Transfer regression (cyber + clinical)
-python tests/test_transfer_regression.py
+### Run Core Regression Checks
 
-# Individual transfer pilots
-python experiments/cyber_transfer/run_transfer_pilot.py
-python experiments/clinical_transfer/run_gate1_pilot.py
+```bash
+python -m pytest tests/test_workspace.py tests/test_planner.py tests/test_transfer_regression.py tests/test_golden_c6.py -q
+```
 
-# Adaptive recovery validation
-python experiments/structure_anomaly.py
-python experiments/cross_domain_adaptive_validation.py
+### Run DEIC-CogBench
+
+```bash
+python benchmarks/exec_meta_adapt/run_suite.py
+```
+
+Small smoke run:
+
+```bash
+python benchmarks/exec_meta_adapt/run_suite.py --max-tasks 2 --max-episodes 2
+```
+
+### Run Local Metacognition Benchmark
+
+```bash
+python benchmarks/exec_meta_adapt/frontier_local/run_frontier_local.py --models qwen smollm --tasks benchmarks/exec_meta_adapt/frontier/frontier_tasks_metacog.jsonl --output results/frontier_local/full_40/
+```
+
+### Run Open-Model Expansion
+
+```bash
+python benchmarks/exec_meta_adapt/frontier_local/run_frontier_local.py --models granite qwen smollm tinyllama --tasks benchmarks/exec_meta_adapt/frontier/frontier_tasks_metacog.jsonl --output results/frontier_local/open_model_expansion/full_40_single/
 ```
 
 ---
 
-## Research Context
+## Key Documents
 
-This project contributes to the **Executive Functions** track of the Kaggle Measuring Progress Toward AGI competition. DEIC's core inference mechanisms — adaptive trust discovery, information-gain query selection, and posterior elimination — transferred across multiple hidden-state environments. The main adaptation requirement was the hypothesis generator rather than the trust or query logic. This suggests a useful architectural pattern for building reusable cognitive subsystems: separate domain-agnostic inference from domain-specific hypothesis generation.
+### Benchmark and Milestone Docs
+- `docs/DEIC_BENCHMARK_PACKAGE.md`
+- `docs/milestones/deic_platform_v1.md`
+- `benchmarks/exec_meta_adapt/README.md`
 
-DEIC is a concrete, testable cognitive module — not a claim of general intelligence.
+### Submission and Benchmark Result Docs
+- `docs/releases/frontier_local_submission_bundle.md`
+- `docs/releases/frontier_local_metacognition_first_results.md`
+- `docs/releases/frontier_local_metacognition_expansion.md`
+- `docs/releases/frontier_local_metacognition_expansion_abstract.md`
+
+### Strategy / Next Phase
+- `SUBMITTED_CHECKPOINT.md`
+- `NEXT_PHASE_OPTIONS.md`
+
+---
+
+## What This Repository Is Not Claiming
+
+This project is **not** claiming:
+- AGI
+- general intelligence
+- consciousness
+- open-ended structure invention
+- broad causal or world-model competence
+
+What it **does** claim:
+- a reusable bounded executive inference subsystem
+- benchmark-grade evaluation for that subsystem
+- a real bounded DSL v1 result
+- a metacognition benchmark that separates multiple failure modes in open models
+
+---
+
+## Current Status
+
+The project is in a good, disciplined state:
+- submission artifacts are frozen
+- bounded DEIC milestones are tagged
+- the metacognition expansion result is checkpointed
+- future work is separated from frozen results
+
+The next sensible directions are:
+- benchmark expansion and external-facing reporting
+- DSL v2 design-only work
+- applied wrappers around the frozen DEIC core
+
+---
+
+## License / Usage Note
+
+If you plan to publish or reuse this work externally, review the benchmark artifacts, submission bundle, and any generated assets carefully so the packaging matches your intended release standard.
