@@ -68,3 +68,47 @@ def test_explainer_escalate():
     op = explainer.generate_explanation(ws, sm, pd, action, style="operator")
     assert "[ESCALATE]" in op
     assert "Escaping to manual review" in op
+
+
+def test_explainer_diagnostic_omits_advisory_without_trace():
+    ws = CognitiveState(
+        entropy=0.4,
+        confidence_margin=0.9,
+        trusted_source_locked=True,
+        trust_distribution={"Agent_A": 1.0},
+    )
+    sm = SelfModel.from_workspace(ws)
+    pd = PlannerDecision(mode=PlannerMode.REFINE, rationale="steady", recommendation="")
+    action = {"type": "commit_consensus", "escalated": False, "proposed_inventory": {}}
+
+    explainer = StateExplainer()
+    diag = explainer.generate_explanation(ws, sm, pd, action, style="diagnostic")
+
+    assert "Advisory Conscience" not in diag
+    assert "6. Falsifiability:" in diag
+
+
+def test_explainer_diagnostic_includes_advisory_only_with_trace():
+    ws = CognitiveState(
+        entropy=0.6,
+        confidence_margin=0.72,
+        trusted_source_locked=False,
+        conscience_advisory_enabled=True,
+        conscience_advisory_trace_complete=True,
+        conscience_advisory_label="value_conflict_present",
+        conscience_advisory_harm_risk="moderate",
+        conscience_advisory_honesty_conflict=True,
+        conscience_advisory_responsibility_conflict=False,
+        conscience_advisory_repair_needed=False,
+    )
+    sm = SelfModel.from_workspace(ws)
+    pd = PlannerDecision(mode=PlannerMode.REFINE, rationale="steady", recommendation="")
+    action = {"type": "commit_consensus", "escalated": False, "proposed_inventory": {}}
+
+    explainer = StateExplainer()
+    diag = explainer.generate_explanation(ws, sm, pd, action, style="diagnostic")
+
+    assert "Advisory Conscience" in diag
+    assert "Label=value_conflict_present" in diag
+    assert "harm_risk=moderate" in diag
+    assert "7. Falsifiability:" in diag

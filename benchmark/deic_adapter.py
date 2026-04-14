@@ -16,6 +16,10 @@ from deic_core import (
     CommitController,
     MinimalPlanner,
     SelfModel,
+    build_advisory_appraisal,
+    evaluate_conscience_advisory,
+    apply_conscience_advisory_trace,
+    conscience_advisory_trace_dict,
     benchmark_generator,
 )
 
@@ -73,6 +77,13 @@ def _is_better_replay_result(candidate, current_best, candidate_spec, best_spec)
     return candidate_key > best_key
 
 
+def _annotate_conscience_advisory(ws, candidate_action, domain_profile):
+    appraisal = build_advisory_appraisal(ws, domain_profile)
+    result = evaluate_conscience_advisory(ws, candidate_action, domain_profile)
+    apply_conscience_advisory_trace(ws, appraisal, result)
+    return conscience_advisory_trace_dict(ws)
+
+
 class DEICBenchmarkAdapter:
     """
     Drop-in replacement for DiscreteStructureAgentV2 that delegates
@@ -93,6 +104,7 @@ class DEICBenchmarkAdapter:
         enable_final_contradiction_probe=True,
         enable_post_adaptation_guarded_probe=False,
         enable_post_probe_family_proposal=False,
+        enable_conscience_advisory=False,
     ):
         self.adaptive_trust = adaptive_trust
         self.use_controller = use_controller
@@ -106,6 +118,7 @@ class DEICBenchmarkAdapter:
         self.enable_final_contradiction_probe = enable_final_contradiction_probe
         self.enable_post_adaptation_guarded_probe = enable_post_adaptation_guarded_probe
         self.enable_post_probe_family_proposal = enable_post_probe_family_proposal
+        self.enable_conscience_advisory = enable_conscience_advisory
 
     def solve(self, env):
         initial_state = env.get_initial_state()
@@ -364,6 +377,8 @@ class DEICBenchmarkAdapter:
                 entry["recommendation"] = decision.recommendation
                 entry["action"] = commit_action
                 entry["remaining_budget"] = max(0, remaining)
+                if self.enable_conscience_advisory:
+                    entry["conscience_advisory"] = _annotate_conscience_advisory(ws, "COMMIT", "benchmark")
                 trajectory.append(entry)
                 result = env.step(commit_action)
                 if engine.adaptation_count > 0:
@@ -379,6 +394,8 @@ class DEICBenchmarkAdapter:
                     correct=result.get("consensus_reached", False),
                     escalated=False,
                 )
+                if self.enable_conscience_advisory:
+                    _annotate_conscience_advisory(ws, "COMMIT", "benchmark")
                 result["final_workspace"] = ws
                 return trajectory, result
             elif mode == "ESCALATE":
@@ -389,6 +406,8 @@ class DEICBenchmarkAdapter:
                 entry["recommendation"] = decision.recommendation
                 entry["action"] = escalate_action
                 entry["remaining_budget"] = max(0, remaining)
+                if self.enable_conscience_advisory:
+                    entry["conscience_advisory"] = _annotate_conscience_advisory(ws, "ESCALATE", "benchmark")
                 trajectory.append(entry)
                 result = env.step(escalate_action)
                 ws.family_search_outcome = family_search_outcome or "escalated"
@@ -407,6 +426,8 @@ class DEICBenchmarkAdapter:
                     ws.recovery_blocker = recovery_blocker
                     ws.recovery_path_taken = recovery_path_taken
                 ws.final_outcome_category = _final_outcome_category(ws, correct=False, escalated=True)
+                if self.enable_conscience_advisory:
+                    _annotate_conscience_advisory(ws, "ESCALATE", "benchmark")
                 result["final_workspace"] = ws
                 return trajectory, result
             elif mode == "RESET_TRUST":

@@ -88,6 +88,22 @@ class CognitiveState:
     missed_anomalous_node: bool = False
     coverage_blindspot_triggered: bool = False
     final_outcome_category: str = "" # e.g. "BLIND_SPOT_FAILURE", "CORRECT_ADAPT_RECOVERY"
+
+    # Advisory conscience telemetry
+    conscience_advisory_enabled: bool = False
+    conscience_advisory_uncertainty_context: float = 0.0
+    conscience_advisory_trust_context: float = 0.5
+    conscience_advisory_care_relevance: float = 0.0
+    conscience_advisory_moral_weight: float = 0.0
+    conscience_advisory_threat_context: float = 0.0
+    conscience_advisory_candidate_action: str = ""
+    conscience_advisory_harm_risk: str = "none"
+    conscience_advisory_honesty_conflict: bool = False
+    conscience_advisory_responsibility_conflict: bool = False
+    conscience_advisory_repair_needed: bool = False
+    conscience_advisory_label: str = ""
+    conscience_advisory_value_conflict_present: bool = False
+    conscience_advisory_trace_complete: bool = False
     
     # ── Extended workspace fields ────────────────────────────────────
     query_rationale: str = ""

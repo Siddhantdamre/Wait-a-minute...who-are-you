@@ -37,13 +37,28 @@ class StateExplainer:
             return f"[{mode_str}] {action_desc}. Confidence is {sm.confidence_description}. Trust is {'LOCKED' if ws.trusted_source_locked else 'OPEN'}."
             
         elif style == "diagnostic":
+            advisory_line = ""
+            if getattr(ws, "conscience_advisory_enabled", False) and getattr(ws, "conscience_advisory_trace_complete", False):
+                advisory_line = (
+                    f"\n6. Advisory Conscience: Label={ws.conscience_advisory_label}; "
+                    f"harm_risk={ws.conscience_advisory_harm_risk}, "
+                    f"honesty_conflict={ws.conscience_advisory_honesty_conflict}, "
+                    f"responsibility_conflict={ws.conscience_advisory_responsibility_conflict}, "
+                    f"repair_needed={ws.conscience_advisory_repair_needed}."
+                )
+            falsifiability_line = (
+                "\n7. Falsifiability: " + falsifiability
+                if advisory_line else
+                "6. Falsifiability: " + falsifiability
+            )
             return (
                 f"1. Current Belief: Tracking {active_count} active hypotheses.\n"
                 f"2. Confidence: {sm.confidence_description.capitalize()} (margin {ws.confidence_margin:.2f}).\n"
                 f"3. Trust: {'Locked to reliable source' if ws.trusted_source_locked else 'Trust phase incomplete; forcing divergence'}.\n"
                 f"4. Active Mode: {mode_str}.\n"
                 f"5. Action Rationale: {action_desc} as next logical step. {pd.rationale}\n"
-                f"6. Falsifiability: {falsifiability}"
+                f"{advisory_line}"
+                f"{falsifiability_line}"
             )
         else:
             return "Unknown explanation style."

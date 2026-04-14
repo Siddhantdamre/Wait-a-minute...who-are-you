@@ -197,3 +197,22 @@ def test_workspace_dsl_v1_telemetry_defaults():
     assert ws.fit_score_current_family == 0.0
     assert ws.fit_score_candidate_family == 0.0
     assert ws.family_search_exhausted is False
+
+
+def test_workspace_conscience_advisory_defaults():
+    """Advisory conscience fields should exist with stable defaults."""
+    ws = CognitiveState()
+    assert ws.conscience_advisory_enabled is False
+    assert ws.conscience_advisory_uncertainty_context == 0.0
+    assert ws.conscience_advisory_trust_context == 0.5
+    assert ws.conscience_advisory_care_relevance == 0.0
+    assert ws.conscience_advisory_moral_weight == 0.0
+    assert ws.conscience_advisory_threat_context == 0.0
+    assert ws.conscience_advisory_candidate_action == ""
+    assert ws.conscience_advisory_harm_risk == "none"
+    assert ws.conscience_advisory_honesty_conflict is False
+    assert ws.conscience_advisory_responsibility_conflict is False
+    assert ws.conscience_advisory_repair_needed is False
+    assert ws.conscience_advisory_label == ""
+    assert ws.conscience_advisory_value_conflict_present is False
+    assert ws.conscience_advisory_trace_complete is False

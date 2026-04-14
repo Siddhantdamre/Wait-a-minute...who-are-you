@@ -15,6 +15,14 @@ from .workspace import CognitiveState
 from .self_model import SelfModel
 from .planner import MinimalPlanner, PlannerMode, PlannerDecision
 from .explainer import StateExplainer
+from .conscience_advisory import (
+    AdvisoryAppraisalSnapshot,
+    ConscienceAdvisoryResult,
+    build_advisory_appraisal,
+    evaluate_conscience_advisory,
+    apply_conscience_advisory_trace,
+    conscience_advisory_trace_dict,
+)
 from .hypothesis import (
     HypothesisGenerator,
     FixedPartitionGenerator,
@@ -37,6 +45,12 @@ __all__ = [
     "PlannerMode",
     "PlannerDecision",
     "StateExplainer",
+    "AdvisoryAppraisalSnapshot",
+    "ConscienceAdvisoryResult",
+    "build_advisory_appraisal",
+    "evaluate_conscience_advisory",
+    "apply_conscience_advisory_trace",
+    "conscience_advisory_trace_dict",
     "HypothesisGenerator",
     "FixedPartitionGenerator",
     "VariablePartitionGenerator",

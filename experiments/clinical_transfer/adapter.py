@@ -9,7 +9,18 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-from deic_core import DEIC, clinical_generator, BeliefInspector, CommitController, MinimalPlanner, SelfModel
+from deic_core import (
+    DEIC,
+    clinical_generator,
+    BeliefInspector,
+    CommitController,
+    MinimalPlanner,
+    SelfModel,
+    build_advisory_appraisal,
+    evaluate_conscience_advisory,
+    apply_conscience_advisory_trace,
+    conscience_advisory_trace_dict,
+)
 
 
 def _is_saturated_with_untouched(ws):
@@ -33,6 +44,13 @@ def _final_outcome_category(ws, correct, escalated):
     if ws.get("adaptation_count", 0) > 0:
         return "POST_ADAPT_WRONG_COMMIT"
     return "STABLE_WRONG_COMMIT"
+
+
+def _annotate_conscience_advisory(ws, candidate_action, domain_profile):
+    appraisal = build_advisory_appraisal(ws, domain_profile)
+    result = evaluate_conscience_advisory(ws, candidate_action, domain_profile)
+    apply_conscience_advisory_trace(ws, appraisal, result)
+    return conscience_advisory_trace_dict(ws)
 
 
 class ClinicalDEICAdapter:
@@ -60,6 +78,7 @@ class ClinicalDEICAdapter:
         enable_final_contradiction_probe=True,
         enable_post_adaptation_guarded_probe=False,
         enable_post_probe_family_proposal=False,
+        enable_conscience_advisory=False,
     ):
         self.adaptive_trust = adaptive_trust
         self.use_controller = use_controller
@@ -75,6 +94,7 @@ class ClinicalDEICAdapter:
         self.enable_final_contradiction_probe = enable_final_contradiction_probe
         self.enable_post_adaptation_guarded_probe = enable_post_adaptation_guarded_probe
         self.enable_post_probe_family_proposal = enable_post_probe_family_proposal
+        self.enable_conscience_advisory = enable_conscience_advisory
 
     @staticmethod
     def _is_better_fit(candidate, current_best, candidate_spec, best_spec):
@@ -347,6 +367,8 @@ class ClinicalDEICAdapter:
                         "recommendation": decision.recommendation,
                         "remaining_budget": max(0, remaining),
                         "action": {"type": "commit_assessment", "proposed_vitals": proposed},
+                        "conscience_advisory": _annotate_conscience_advisory(ws, "COMMIT", "clinical")
+                        if self.enable_conscience_advisory else None,
                     }
                 )
                 if engine.adaptation_count > 0:
@@ -362,6 +384,8 @@ class ClinicalDEICAdapter:
                     correct=res.get("correct", False),
                     escalated=False,
                 )
+                if self.enable_conscience_advisory:
+                    _annotate_conscience_advisory(ws, "COMMIT", "clinical")
                 res["final_workspace"] = ws
                 res["decision_trace"] = decision_trace
                 return res
@@ -374,6 +398,8 @@ class ClinicalDEICAdapter:
                         "recommendation": decision.recommendation,
                         "remaining_budget": max(0, remaining),
                         "action": {"type": "escalate_uncertainty"},
+                        "conscience_advisory": _annotate_conscience_advisory(ws, "ESCALATE", "clinical")
+                        if self.enable_conscience_advisory else None,
                     }
                 )
                 if engine.adaptation_count > 0:
@@ -391,6 +417,8 @@ class ClinicalDEICAdapter:
                     ws.recovery_blocker = recovery_blocker
                     ws.recovery_path_taken = recovery_path_taken
                 ws.final_outcome_category = _final_outcome_category(ws, correct=False, escalated=True)
+                if self.enable_conscience_advisory:
+                    _annotate_conscience_advisory(ws, "ESCALATE", "clinical")
                 return {
                     "escalated": True,
                     "abstained": True,
