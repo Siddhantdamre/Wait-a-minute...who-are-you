@@ -1,16 +1,31 @@
 # DEIC: Discrete Executive Inference Core
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-open-2DA44E?style=for-the-badge&logo=githubpages)](https://siddhantdamre.github.io/Wait-a-minute...who-are-you/)
+[![Portfolio Guide](https://img.shields.io/badge/Portfolio-context-0969DA?style=for-the-badge&logo=github)](https://github.com/Siddhantdamre/Siddhantdamre/blob/main/PORTFOLIO.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A research repository for bounded cognitive reasoning under partial observability.
 
 This project centers on **DEIC**: a reusable executive inference subsystem that maintains discrete hidden-state beliefs, tracks source reliability, allocates diagnostic queries under budget pressure, and supports bounded adaptive recovery when the assumed structure family is wrong.
 
-The repository now contains three mature layers of work:
+The repository contains three mature layers of work:
 
 1. **A frozen bounded cognitive subsystem** in `deic_core/`
 2. **A reusable benchmark package** in `benchmarks/exec_meta_adapt/`
 3. **A metacognition benchmark path** that evaluates `COMMIT` vs `ABSTAIN` vs `ESCALATE` behavior in open-weight models
 
 This is **not** a claim of AGI. It is a concrete, testable research program around hidden-state inference, trust, safety-aware abstention, bounded adaptation, and metacognitive evaluation.
+
+## Recruiter Quick Look
+
+| What to check | Why it matters |
+| --- | --- |
+| [Live surface](https://siddhantdamre.github.io/Wait-a-minute...who-are-you/) | Fast conceptual overview of the DEIC research direction. |
+| `deic_core/` | Core bounded inference subsystem. |
+| `benchmarks/exec_meta_adapt/` | Benchmark package and evaluation harness. |
+| `docs/releases/` | Submission-ready notes and benchmark results. |
+| `tests/` | Regression and smoke-test coverage. |
+| `docs/DEMO_ROADMAP.md` | Plan for turning the repo into an interactive simulator. |
 
 ---
 
